@@ -1,0 +1,5 @@
+Hola::Hola $nick
+Como estás::Bien y tu $nick
+Que tal::Aquí viendo que hacer, y tu $nick
+Bien::Qué haces (? $nick
+Cual es tu prefijo::Mi prefijo es $prefix
