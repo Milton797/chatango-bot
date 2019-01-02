@@ -56,18 +56,20 @@ class online_defs:
     try:
       lang       = config.database.take_lang_user( lang, "gis_answer" )
       save_total = int( total ) if str.isdigit( str( total ) ) else 3
-      image  = urlparse.quote( image.replace( " ","+" ) )
+      image  = urlparse.quote( image.replace( " ", "+" ) )
       url    = ("https://www.googleapis.com/customsearch/v1?q={}&num={}"
-                "&safe=active&cx={}&key={}&searchType=image").format( image, str(save_total), online_defs.cx,
-                                                                     online_defs.google_api_keys )
+                "&safe=active&cx={}&key={}&searchType=image")
+      url    = url.format( image, str(save_total), online_defs.cx, 
+                          online_defs.google_api_keys )
       with urlreq.urlopen( url ) as open_url:
         decode            = open_url.read().decode("utf-8")
-        data              = json.loads(decode)
+        data              = json.loads( decode )
         total_imgs        = []
         if int( data["queries"]["request"][0]["totalResults"] ) is not 0:
           page_info       = data["items"]
-          imgs            = [ page_info[x]["link"] for x in range(0, save_total) ]
-          imgs_format     = [ ( total_imgs.append( "<b>%s)</b> %s" % ( x, c ) ) ) for x, c in enumerate( imgs, start = 1 ) ]
+          imgs            = [ page_info[x]["link"] for x in range( 0, save_total ) ]
+          imgs_format     = [ ( total_imgs.append( "<b>%s)</b> %s" % ( x, c ) ) 
+                                                                      ) for x, c in enumerate( imgs, start = 1 ) ]
           text            = lang[0].format( " ".join( total_imgs ) )
           return text
         else:

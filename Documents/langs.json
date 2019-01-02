@@ -2,7 +2,6 @@
     "for_bot": {
         "en": {
         	"start": "\n◤Bot_started◢ \n[ E_Pycache: {}  All_The_Data_Loaded: {} ]\n",
-            "print_bot": "[{}][{}][{}][{}]: {}",
             "no_conection": "\n◤No_Internet_Connection◢",
             "keyboard_kill": "\n◤Finish_With_Keyboard_Started◢",
             "on_connect": "[{}][{}][Room_Connected]",
@@ -33,7 +32,6 @@
         },
         "es": {
             "start": "\n◤Bot_iniciado◢ \n[ E_Pycache: {}  Toda_La_Data_Cargada: {} ]\n",
-            "print_bot": "[{}][{}][{}][{}]: {}",
             "no_conection": "\n◤No_Hay_Conexión_A_Internet◢",
             "keyboard_kill": "\n◤Terminar_Con_Teclado_Iniciado◢",
             "on_connect": "[{}][{}][Sala_Conectada]",

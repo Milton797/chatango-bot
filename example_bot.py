@@ -52,15 +52,16 @@ class Example_Bot(megach.RoomManager):
 
       dic          = config.database.take_user( username )
       dicr         = config.database.take_room( roomname )
+
       if username in config.database.wl:
         if dic["nick"]:
-          nick     = "【{2}{0} - {1}{3}】".format( usershowname, dic["nick"],
-                                           config.styles_bot.titles_stile,
-                                           config.styles_bot.normal_stile )
+          nick     = "{2}[{0} - {1}]{3}".format( usershowname, dic["nick"],
+                                                config.styles_bot.titles_style,
+                                                config.styles_bot.normal_style )
         else:
           nick     = "{1} @{0}{2}".format( usershowname,
-                                   config.styles_bot.titles_stile,
-                                   config.styles_bot.normal_stile )
+                                          config.styles_bot.titles_stile,
+                                          config.styles_bot.normal_stile )
 
       if username is rusername or username[0] in config.globals_v.anons or dic["lvl"] is -1:
         return

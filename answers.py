@@ -31,17 +31,17 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
       dicr       = config.database.take_room( roomname )
     else:
       dicr       = config.database.take_room( "for_pm" )
-
     dic          = config.database.take_user( username )
+
     if username in config.database.wl:
       if dic["nick"]:
-        nick     = "【{2}{0} - {1}{3}】".format( usershowname, dic["nick"],
-                                         config.styles_bot.titles_stile,
-                                         config.styles_bot.normal_stile )
+        nick     = "{2}[{0} - {1}]{3}".format( usershowname, dic["nick"],
+                                              config.styles_bot.titles_style,
+                                              config.styles_bot.normal_style )
       else:
         nick     = "{1} @{0}{2}".format( usershowname,
-                                 config.styles_bot.titles_stile,
-                                 config.styles_bot.normal_stile )
+                                        config.styles_bot.titles_style,
+                                        config.styles_bot.normal_style )
 
 ################
 # Auto answers #

@@ -26,7 +26,8 @@ def main_file():
     print( text_f )
 
     for x in config.database.rooms.keys():
-      example_bot_v.joinRoom( x )
+      if x != "for_pm":
+        example_bot_v.joinRoom( x )
     example_bot_v.main()
 
 

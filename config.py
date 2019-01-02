@@ -43,8 +43,8 @@ class styles_bot:
   font_color   = "000000"
   font_face    = 1
   font_size    = 12
-  titles_stile = "<f x{}{}='{}'>".format( font_size, name_color, font_face )
-  normal_stile = "<f x{}{}='{}'>".format( font_size, font_color, font_face )
+  titles_style = "<f x{}{}='{}'>".format( font_size, name_color, font_face )
+  normal_style = "<f x{}{}='{}'>".format( font_size, font_color, font_face )
 
 ###############################################################################################################
 
@@ -72,7 +72,7 @@ class paths:
 class style_print:
 
   def print_bot(self, room, user, message):
-    text   = database.take_lang_bot( bot.bot_lang, "print_bot" )
+    text   = "[{}][{}][{}][{}]: {}"
     text_i = text
     u_sho  = tools.user_showname( user.name )
     text_f = text_i.format( style_print.time_now()[0],
@@ -321,7 +321,10 @@ class database:
       if lang in langs_user_room_bot and traduction in langs_user_room_bot[lang]:
         return ( langs_user_room_bot[lang][traduction] )
       else:
-        return "No lang: {}, {}".format( repr( lang ), repr( traduction ) )
+        text   = "No lang: {}, {}"
+        text_f = text.format( repr( lang ), repr( traduction ) )
+        print( text )
+        return text
     except:
       return "Error {}".format( tools.error_def() )
 
@@ -333,7 +336,10 @@ class database:
       if lang in langs_user_room_bot and traduction in langs_user_room_bot[lang]:
         return ( langs_user_room_bot[lang][traduction] )
       else:
-        return "No lang: {}, {}".format( repr( lang ), repr( traduction ) )
+        text   = "No lang: {}, {}"
+        text_f = text.format( repr( lang ), repr( traduction ) )
+        print( text )
+        return text
     except:
       return "Error {}".format( tools.error_def() )
 
@@ -345,7 +351,10 @@ class database:
       if lang in langs_user_room_bot and traduction in langs_user_room_bot[lang]:
         return ( langs_user_room_bot[lang][traduction] )
       else:
-        return "No lang: {}, {}".format( repr( lang ), repr( traduction ) )
+        text   = "No lang: {}, {}"
+        text_f = text.format( repr( lang ), repr( traduction ) )
+        print( text )
+        return text
     except:
       return "Error {}".format( tools.error_def() )
 
@@ -458,13 +467,16 @@ class tools:
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
-  def answer_room_pm(room, respuesta: str = "", html: bool = False,
-                     user_: str = "", canal_: int = 0):
+  def answer_room_pm(room, respuesta_: str = "", html_: bool = False,
+                     user_: str = "", canal_: int = 0, badge_: int = 0):
     try:
       if room.name is not "PM":
-        room.message( str( respuesta ), html, int( canal_ ) )
+        room.message( str( respuesta_ ), html = bool( html_ ),
+                     canal = int( canal_ ), badge = int( badge_ ) )
       elif room.name is "PM":
-        room.message( user_, str( respuesta ).replace("&", "&amp;"), html )
+        respuesta_ = respuesta_.replace("&", "&amp;")
+        room.message( str( user_ ), str( respuesta_ ),
+                     html = bool( html_ ) )
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
@@ -602,13 +614,17 @@ class files:
       file_to_replace = "{}{}megach.py".format( paths.u_bot, os.sep )
       with urlreq.urlopen( url ) as info_online:
         info_online = info_online.read().decode("utf-8").splitlines()
+        megach_online_v = [ x for x in info_online if "version =" in x ][0].split("=")[1]
+        megach_online_v = megach_online_v.replace("'", "").lstrip( " " )
       with open( file_to_replace, encoding = "utf-8" ) as a_megach:
         a_megach = a_megach.read().splitlines()
+        megach_local_v = [ x for x in a_megach if "version =" in x ][0].split("=")[1]
+        megach_local_v = megach_local_v.replace("'", "").lstrip( " " )
         if a_megach == info_online:
-          download = False
+          download = [ False, megach_local_v, megach_online_v ]
         else:
           urlreq.urlretrieve( url, file_to_replace )
-          download = True
+          download = [ True, megach_local_v, megach_online_v ]
           urlreq.urlcleanup()
         return download
       a_megach.close()

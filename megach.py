@@ -7,7 +7,6 @@ Original Author: Megamaster12 <supermegamaster32@gmail.com>
 Current Maintainers and Contributors:
  Megamaster12
  TheClonerx
-Version: 1.5.16
 """
 ################################################################
 # Imports
@@ -41,7 +40,7 @@ if sys.version_info[1] < 5:
 ################################################################
 # Depuración
 ################################################################
-version = 'M1.5.16'
+version = 'M1.5.18'
 version_info = version.split('.')
 debug = True
 ################################################################
@@ -1108,7 +1107,8 @@ class WSConnection:
         self._wlock = False  # Si no se debe envíar nada al wbuf
         self._wlockbuf = b''  # Cuando no se manda al wbuf, viene acá
         self._tlock = threading.Lock()  # Para controlar esta conexion
-        self._connlock = threading.Lock()  # TODO usar en comandos que retornan datos
+        # TODO usar en comandos que retornan datos
+        self._connlock = threading.Lock()
         self._terminator = ['\x00', '\r\n\x00']
         self._pingdata = ''
         self._fedder = None
@@ -1229,7 +1229,8 @@ class WSConnection:
                                 # comandos de la conexión
                                 self.disconnect()
                             else:
-                                self.reconnect()  # TODO
+                                self.reconnect()
+                                # TODO este reconnect puede bloquearse
                                 # ConnectionRefusedError
             except socket.error as cre:  # socket.error -
                 # ConnectionResetError
@@ -1268,7 +1269,7 @@ class WSConnection:
 
     def _ping(self):
         self._sendCommand('')
-        # TODO self._callEvent('onPing')
+        self._callEvent('onPing')
 
     def _process(self, data: str):
         """
@@ -1390,6 +1391,7 @@ class WSConnection:
         self._firstCommand = False
         self._tlock = threading.Lock()
         self._connlock = threading.Lock()
+        self._mods = dict()
 
 
 class CHConnection(WSConnection):
@@ -1514,13 +1516,8 @@ class CHConnection(WSConnection):
             msg = html2.escape(msg, quote = False)
 
         msg = msg.replace('\n', '\r').replace('~', '&#126;')
-        for x in 'b i u'.split():
-            msg = msg.replace('<%s>' % x, '<%s>' % x.upper()).replace(
-                    '</%s>' % x, '</%s>' % x.upper())
-        # TODO comprobar  velocidad comparado con el otro
-        # msg = msg.replace("<b>", "<B>").replace("</b>", "</B>").replace(
-        # "<i>", "<I>").replace("</i>", "</I>").replace(
-        #   "<u>", "<U>").replace("</u>", "</U>")
+        for x in set(re.findall('<[biu]>|</[biu]>', msg)):
+            msg = msg.replace(x, x.upper()).replace(x, x.upper())
         if self.name == 'PM':
             formt = '<n{}/><m v="1"><g x{:0>2.2}s{}="{}">{}</g></m>'
             fc = '{:X}{:X}{:X}'.format(*tuple(
@@ -1623,8 +1620,7 @@ class PM(CHConnection):
         return [x.name for x in self.contacts]
 
     @property
-    def _getStatus(self):
-        # TODO
+    def status(self):
         return self._status
 
     def _getAuth(self, name: str, password: str):
@@ -1720,14 +1716,14 @@ class PM(CHConnection):
         except:
             return [None] * 3
 
-    def checkOnline(self, user):  # TODO
+    def checkOnline(self, user):  # TODO borrar este def viejo checkOnline
         """return True if online, False if offline, None if unknown"""
         if user in self._status:
             return self._status[user][1]
         else:
             return None
 
-    def getIdle(self, user):  # TODO
+    def getIdle(self, user):  # TODO Borrar getIddle, el track es más seguro
         """
         Return last active time, time.time() if isn't idle, 0 if offline,
         None if unknown
@@ -1877,8 +1873,8 @@ class PM(CHConnection):
     def _rcmd_seller_name(self, args):  # TODO completar _seller_name
         pass
 
-    def _rcmd_status(self, args):  # TODO completar _status
-
+    def _rcmd_status(self, args):
+        # TODO completar _status
         # status:linkkg:1531458009.39:online:
         # status:linkkg:1531458452.5:app:
         pass
@@ -1977,7 +1973,6 @@ class Room(CHConnection):
         self._mqueue = dict()
         self._mods = dict()
         self._msgs = dict()  # TODO esto y history es lo mismo?
-        self._name = name
         self._nameColor = ''
         self._port = 443  # TODO cambio a 8080 si no está disponible
         self._rbuf = b''
@@ -1998,39 +1993,59 @@ class Room(CHConnection):
         self._nomore = False  # Indica si el chat tiene más mensajes
         super().__init__(mgr, name, getServer(name), account or ('', ''))
 
-        # TODO
-
     ####################
     # Propiedades
     ####################
+    ##########
+    # Lista de Usuarios
     @property
-    def allshownames(self):
-        """Todos los nombres de usuarios en la sala, incluyendo anons"""
-        return [x.showname for x in self.alluserlist]
+    def userlist(self):
+        """
+        Lista de usuarios en la sala, por defecto muestra todos los
+        usuarios (no anons) sin incluir sesiones extras
+        """
+        return self._getUserlist()
 
     @property
-    def shownames(self):
-        return list(set([x.showname for x in self.userlist]))
+    def anonlist(self):
+        """Lista de anons detectados"""
+        return list(set(self.alluserlist) - set(self.userlist))
 
     @property
     def alluserlist(self):
-        """Lista de todos los usuarios en la sala, incluyendo anons"""
+        """Lista de todos los usuarios en la sala (con anons)"""
         return sorted([x[1] for x in list(self._userdict.values())],
                       key = lambda z: z.name.lower())
 
+    ##########
+    # Nombres de Usuarios
+    @property
+    def usernames(self):
+        """Nombres de usuarios en la sala (sin anons)"""
+        return [x.name for x in self.userlist]
+
+    @property
+    def anonnames(self):
+        """Nombres de los anons detectados"""
+        return [x.name for x in self.anonlist]
+
     @property
     def allusernames(self):
+        """Nombres de usuarios y anons detectados"""
         return [x.name for x in self.alluserlist]
 
     @property
-    def badge(self):
-        """Insignia usada en la sala"""
-        return self._badge
+    def shownames(self):
+        """Nombres para mostrar de los usuarios (sin anons)"""
+        return list(set([x.showname for x in self.userlist]))
 
-    @badge.setter
-    def badge(self, value):
-        self._badge = value
+    @property
+    def allshownames(self):
+        """Todos los nombres de usuarios en la sala (con anons)"""
+        return [x.showname for x in self.alluserlist]
 
+    ##########
+    # Bans
     @property
     def banlist(self):
         """La lista de usuarios baneados en la sala"""
@@ -2038,12 +2053,25 @@ class Room(CHConnection):
 
     @property
     def bannames(self):
+        """Nombres de usuarios baneados"""
         return [x.name for x in self.banlist]
 
     @property
-    def botname(self):  # TODO anon o temp !#
-        """Nombre del bot en la sala, TODO esto o currentname"""
-        return self.name
+    def unbanlist(self):
+        """Lista de usuarios desbaneados"""
+        return list(set(x.target.name for x in self._unbanqueue))
+
+    ##########
+    # Insignias y canales
+    @property
+    def badge(self):
+        """Insignia usada en la sala"""
+        return self._badge
+
+    @badge.setter
+    def badge(self, value):
+        """Cambiamos la insignia usada en los mensajes"""
+        self._badge = value  # TODO quitar private o mejorar badge.setter
 
     @property
     def channel(self):
@@ -2052,28 +2080,35 @@ class Room(CHConnection):
 
     @channel.setter
     def channel(self, value):
-        self._channel = value
+        self._channel = value  # TODO quitar private o mejorar channel.setter
+
+    ##########
+    # Otros ajustes
+    @property
+    def flags(self):
+        return self._flags
+
+    @flags.setter  # TODO ajustar flags.setter para cambiar la sala
+    def flags(self, value):
+        self._flags = value
+
+    @property
+    def botname(self):  # TODO anon o temp !#
+        """Nombre del bot en la sala, """
+        # TODO botname o currentname
+        return self.name
 
     @property
     def currentname(self):
         """
         Nombre de usuario que el bot tiene en la sala
-        TODO carece de utilidad si se puede usar user.name
+        # TODO carece de utilidad si se puede usar user.name
         """
         return self._currentname
 
     @property
-    def flags(self):
-        return self._flags
-
-    @flags.setter  # TODO ajustarlo para cambiar la sala
-    def flags(self, value):
-        self._flags = value
-
-    @property
     def about(self):
-        return _clean_message(urlreq.unquote(self.info.about))[
-                   0] or None
+        return _clean_message(urlreq.unquote(self.info.about))[0] or None
 
     @property
     def title(self):
@@ -2109,7 +2144,7 @@ class Room(CHConnection):
     @property
     def modflags(self):
         """Flags de los mods en la sala. Se puede saber que permisos tienen"""
-        return dict([(user.name, self._mods[user]) for user in self._mods])
+        return dict([(k.name, v) for k, v in self._mods.items()])
 
     @property
     def modnames(self):
@@ -2143,21 +2178,9 @@ class Room(CHConnection):
         return self._silent
 
     @property
-    def unbanlist(self):
-        return list(set(x.target.name for x in self._unbanqueue))
-
-    @property
     def user(self):
         """Mi usuario"""
         return self._user
-
-    @property
-    def userlist(self):
-        """
-        Lista de usuarios en la sala, por defecto muestra todos los
-        usuarios (no anons) sin incluir sesiones extras
-        """
-        return self._getUserlist()
 
     @property
     def alluserCount(self):
@@ -2172,16 +2195,7 @@ class Room(CHConnection):
             return self._usercount
 
     @property
-    def usernames(self):
-        """
-        Nombres de usuarios en la sala. Por defecto usado los valores de
-        userlist
-        """
-        return [x.name for x in self.userlist]
-
-    @property
     def userhistory(self):
-        # TODO regresar solo la ultima sesión para cada usuario
         return self._userhistory
 
     def getSessionlist(self, mode = 0, memory = 0):
@@ -2265,17 +2279,17 @@ class Room(CHConnection):
             return self.banMessage(msg)
         return False
 
-    def clearall(self):  # TODO
+    def clearall(self):
         """Borra todos los mensajes"""
-        if self.user == self._owner or self.user in self._mods and \
-                self._mods.get(
-                        self._user).EDIT_GROUP:
+        mod = self._mods.get(self._user)
+        if self.user == self._owner or (mod and mod.EDIT_GROUP):
             self._sendCommand("clearall")
             return True
         else:
             return False
 
-    def clearUser(self, user):  # TODO probar con anons
+    def clearUser(self, user):
+        # TODO los anons cambian su nombre visible
         if self.getLevel(self.user) > 0:
             msg = self.getLastMessage(user)
             if msg:
@@ -2665,15 +2679,25 @@ class Room(CHConnection):
 
     def _reload(self):
         # self._sendCommand("reload_init_batch")
-        self._sendCommand("gparticipants")
+        if self.userCount <= 1000:
+            self._sendCommand("g_participants:start")
+        else:
+            self._sendCommand("gparticipants:start")
         self._sendCommand("getpremium", "l")
         self._sendCommand('getannouncement')
         self.requestBanlist()
         self.requestUnBanlist()
 
     @staticmethod
-    def _parseFlags(flags: str, molde: dict) -> Struct:  # TODO documentar
-        flags = int(flags)
+    def _parseFlags(flags: str, molde: dict) -> Struct:
+        """
+        Leer flags desde un número, y llenar un Molde con ellos
+        @param flags: Flags int
+        @param molde: Molde a rellenar
+        @return: Struct
+        """
+        # TODO documentar
+        flags = int(flags)  # TODO cambiar a Int
         result = Struct(**dict([(mf, molde[mf] & flags != 0) for mf in molde]))
         result.value = flags
         return result
@@ -2741,14 +2765,9 @@ class Room(CHConnection):
         msgnum = args[5]  # Número del mensaje Si no está no se debe procesar
         ip = args[6]  # Ip del usuario
         channel = args[7] or 0
-        unknown2 = args[8]  # TODO examinar este dato
+        unknown2 = args[8]  # TODO examinar codigo de banned words
         if unknown2 and debug:
-            print(
-                    '[_rcmd_b][' + ':'.join(
-                            args) + ']Encontrado un dato desconocido, '
-                                    'favor avisar al '
-                                    'desarrollador', file = sys.stderr)
-            _savelog('[_rcmd_b][' + ':'.join(args) + ']')
+            _savelog('[_rcmd_b][' + ':'.join(args) + ']' + unknown2)
         rawmsg = ':'.join(args[9:])
         badge = 0
         ispremium = False
@@ -2767,9 +2786,8 @@ class Room(CHConnection):
                                         'desarrollador', file = sys.stderr)
                 _savelog('[_rcmd_b][' + ':'.join(args) + ']')
                 # TODO Descubrir y manupular canales 1|2 (3) y 16|32(48)
-            channel = ((channel & 2048) | (channel & 256)) | (
-                    channel & 35072)  # Se detectan 4 canales y sus  #  #
-            # combinaciones
+            # Se detectan 4 canales y sus combinaciones
+            channel = ((channel & 2048) | (channel & 256)) | (channel & 35072)
         body, n, f = _clean_message(rawmsg)
         if name == "":
             nameColor = None
@@ -2778,13 +2796,15 @@ class Room(CHConnection):
                 # name=[u.name for u in self.userlist if u.sessionids==p]
                 if n.isdigit():
                     name = "!" + getAnonName(puid, n)
+                elif all(x in string.hexdigits for x in n):
+                    name = "!" + getAnonName(puid, str(int(n, 16)))
                 else:
                     # Hay anons con bots que envian malos mensajes y pueden
                     # producir fallos
                     # if debug:
                     # print("Found bad message "+str(args),file=sys.stderr)
-                    return  # TODO en estos casos el mensaje no se muestra ni
-                    #  en el chat
+                    # TODO en estos casos el mensaje no se muestra en chatango
+                    return
         else:
             if n:
                 nameColor = n
@@ -3023,8 +3043,10 @@ class Room(CHConnection):
             self._history.appendleft(msg)
             self._callEvent("onHistoryMessage", user, msg)
 
-    def _rcmd_inited(self, args = None):  # TODO
-        """En el chat esto desactiva la animación de espera"""
+    def _rcmd_inited(self, args = None):
+        """
+        El historial y los comandos inicales se han recibido.
+        """
         self._reload()
         if self.attempts <= 1:
             self._connectattempts = 1
@@ -3032,15 +3054,11 @@ class Room(CHConnection):
         else:
             self._callEvent("onReconnect")
             self._connectattempts = 1
-        # comprobar el tamaño máximo del  #  #
-        # history y solicitar anteriores hasta llenar  # if len(  #  #
-        # self._history) < self._history.maxlen and not self._nomore:  #
-        # self._sendCommand("get_more:20:" + str(self._waitingmore -
-        #  1))  # TODO revisar
+        # TODO, rellenar history hasta el límite indicado
+        # self._sendCommand("get_more:20:" + str(self._waitingmore -  1))
 
     def _rmd_logoutfirst(self, args):
-        # TODO al intentar iniciar sesión sin haber
-        # cerrado otra
+        # TODO al intentar iniciar sesión sin haber cerrado otra
         pass
 
     def _rcmd_logoutok(self, args):
@@ -3080,10 +3098,13 @@ class Room(CHConnection):
             if privs:  # ¿Are there changes?
                 self._callEvent('onModChange', user, privs)
 
-    def _rcmd_miu(self, args):  # TODO documentar
+    def _rcmd_miu(self, args):
+        """Recarga la imagen y/o bg del usuario en cuestión"""
+        # TODO el nombre onPictureChange está ok?
         self._callEvent('onPictureChange', User(args[0]))
 
     def _rcmd_mustlogin(self, args = None):
+        """Debes logearte para participar"""
         self._callEvent('onLoginRequest')
 
     def _rcmd_n(self, args):  # TODO aún hay discrepancias en el contador
@@ -3098,10 +3119,10 @@ class Room(CHConnection):
         """No hay más mensajes por cargar en la sala"""
         self._waitingmore = 0  # TODO revisar
 
-    def _rcmd_ok(self, args):  # TODO
+    def _rcmd_ok(self, args):
         self._owner = User(args[0])
-        self._puid = args[1]  # TODO
-        self._authtype = args[2]  # M=Ok, N= ? TODO tipo C
+        self._puid = args[1]  # TODO definir puid y sessionid
+        self._authtype = args[2]  # TODO M=Ok, N= ? C=??
         self._currentname = args[3]
         self._connectiontime = args[4]
         self._correctiontime = int(float(self._connectiontime) - time.time())
@@ -3176,24 +3197,28 @@ class Room(CHConnection):
                 self._callEvent('onAnonJoin', user, puid)
             # Agregar la sesión a la sala
             self._userdict[ssid] = [contime, user]
+            lista = [x[1] for x in self._userhistory]
+            if user in lista:
+                self._userhistory.remove(
+                        [x for x in self._userhistory if x[1] == user][0])
         else:  # 2 Account Change
             # Quitar la cuenta anterior de la lista y agregar la nueva
             # TODO conectar cuentas que han cambiado usando este método
             if before.isanon:  # Login
                 if user.isanon:  # Anon Login
-                    self._callEvent('onAnonLogin', user, puid)  # TODO
+                    self._callEvent('onAnonLogin', user, puid)
                 else:  # User Login
                     self._callEvent('onUserLogin', user, puid)
             elif not before.isanon:  # Logout
                 if before in self.userlist:
-                    # TODO Agregar apropiadamente sin repetirlos
                     lista = [x[1] for x in self._userhistory]
 
                     if before not in lista:
                         self._userhistory.append([contime, before])
                     else:
-                        self._userhistory.remove(
-                                [x for x in self._userhistory][0])
+                        lst = [x for x in self._userhistory if before == x[1]]
+                        if lst:
+                            self._userhistory.remove(lst[0])
                         self._userhistory.append([contime, before])
                     self._callEvent('onUserLogout', before, puid)
             user.addPersonalUserId(self, puid)
@@ -3223,7 +3248,7 @@ class Room(CHConnection):
                 msg.user._nameColor = msg.nameColor
             msg.attach(self, args[1])
             self._addHistory(msg)
-            if (msg.channel >= 4 or msg.badge) and msg.user not in [
+            if (msg.channel & ModChannels or msg.badge) and msg.user not in [
                 self.owner] + list(self.mods):  # TODO reducir
                 self._mods[msg.user] = self._parseFlags('0', ModFlags)
                 self._mods[msg.user].isadmin = False
@@ -3478,10 +3503,6 @@ class Gestor:
         while self._running:
             time.sleep(0.01)
             pass
-            # room, account = self._colasalas.get()
-            # con = Room(room, self, account)
-            # self._rooms[room] = con
-            # Every room makes this on its own
 
         # Finish
         # Cerrar conexiones
@@ -3499,13 +3520,6 @@ class Gestor:
     def stop(self):
         """Detiene al bot"""
         self._running = False
-        # TODO comprobar si todo esto es necesario
-        # for x in list(self._tasks):
-        # x.cancel()
-        # for x in list(self.rooms):
-        # x.disconnect()
-        # if self.pm:
-        # self.pm.disconnect()
 
     def enableBg(self, activo = True):
         """Enable background if available."""
@@ -3567,6 +3581,10 @@ class Gestor:
         return task
 
     def setNameColor(self, hexcolor):
+        """
+        Cambiar el color del nombre para todas las conexiones
+        @param hexcolor: Color en hexadecimal tipo string
+        """
         self.user._nameColor = hexcolor
 
     def onAnnouncementUpdate(self, room, active):
@@ -3596,15 +3614,39 @@ class Gestor:
         pass
 
     def onAnonJoin(self, room, user, ssid):
+        """
+        Al unirse un Anon a la sala
+        @param room: Sala en la que ocurre el evento
+        @param user: Usuario(anon) que se ha unido
+        @param ssid: Id de sesión del anon (es casi única por sala)
+        """
         pass
 
     def onAnonLeave(self, room, user, ssid):
+        """
+        Al salir un Anon de la sala
+        @param room: Sala en la que ocurre el evento
+        @param user: Usuario que abandona la sala
+        @param ssid: Id de sesión del anon que abandona la sala
+        """
         pass
 
     def onAnonLogin(self, room, user, ssid):
+        """
+        Cuando un user se pone un nombre de Anon
+        @param room: Sala en la que ocurre el evento
+        @param user: Usuario que ha hecho login
+        @param ssid: Id de sesión, con esto se puede saber que anon era
+        """
         pass
 
     def onBan(self, room, user, target):
+        """
+        Al ser baneado un usuario en la sala
+        @param room: Sala en la que ocurre el evento
+        @param user: Usuario que banea
+        @param target: Usuario baneado
+        """
         pass
 
     def onBanlistUpdate(self, room):
@@ -3777,10 +3819,20 @@ class Gestor:
         pass
 
     def onPMBlock(self, pm, user):
-        pass  # TODO documentar
+        """
+        Al bloquear a otro usuario en el PM
+        @param pm: El PM
+        @param user: usuario bloqueado
+        """
+        pass
 
     def onPMContactRemove(self, pm, user):
-        pass  # TODO documentar
+        """
+        Al remover un contacto del PM
+        @param pm: El pm
+        @param user: contacto removido
+        """
+        pass
 
     def onPMContactlistReceive(self, pm):
         """
@@ -3947,10 +3999,22 @@ class Gestor:
         """
         pass
 
-    def onUserLogin(self, room, user, puid):  # TODO documentar
+    def onUserLogin(self, room, user, puid):
+        """
+        Al hacer login con una cuenta de chatango
+        @param room: Sala donde ocurre
+        @param user: Usuario que se ha conectado
+        @param puid: Id personal del usuario
+        """
         pass
 
-    def onUserLogout(self, room, user, puid):  # TODO documentar
+    def onUserLogout(self, room, user, puid):
+        """
+        Al desloguearse de una sala, el usuario sigue como anon
+        @param room: Sala en la que ocurre
+        @param user: Usuario que se desconect+p
+        @param puid: Id personal del usuario
+        """
         pass
 
     def onConnectionLost(self, room, error):
