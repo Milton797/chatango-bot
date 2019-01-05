@@ -140,14 +140,17 @@ class database:
                    "nick": ""
                  }
 
+    Default_Wl_Anons = Default_Wl
+
     Default_Room = {
                      "lang": "en",
                    }
 
-  wl    = {}
-  rooms = {}
+  wl       = {}
+  wl_anons = {}
+  rooms    = {}
 
-  langs = {}
+  langs    = {}
 
   def save_wl():
     try:
@@ -237,11 +240,11 @@ class database:
     except:
       return "Error {}".format( tools.error_def() )
 
-  def erase_user(user):
+  def new_anon(anon):
     try:
-      user = user.lower()
-      if user in database.wl:
-        del database.wl[user]
+      anon = anon.lower()
+      if anon not in database.wl_anons:
+        database.wl_anons.update( {anon: database.molds.Default_Wl_Anons.copy()} )
         return True
       else:
         return False
@@ -253,6 +256,28 @@ class database:
       room = room.lower()
       if room not in database.rooms:
         database.rooms.update( {room: database.molds.Default_Room.copy()} )
+        return True
+      else:
+        return False
+    except:
+      return "Error {}".format( tools.error_def() )
+
+  def erase_user(user):
+    try:
+      user = user.lower()
+      if user in database.wl:
+        del database.wl[user]
+        return True
+      else:
+        return False
+    except:
+      return "Error {}".format( tools.error_def() )
+
+  def erase_anon(anon):
+    try:
+      anon = anon.lower()
+      if anon in database.wl_anons:
+        del database.wl_anons[anon]
         return True
       else:
         return False
@@ -280,6 +305,16 @@ class database:
     except:
       return "Error {}".format( tools.error_def() )
 
+  def update_default_anon(anon):
+    try:
+      anon = anon.lower()
+      for x, c in database.molds.Default_Wl_Anons.items():
+        if x not in database.wl_anons[anon]:
+          database.wl_anons[anon][x] = c
+      return True
+    except:
+      return "Error {}".format( tools.error_def() )
+
   def update_default_room(room):
     try:
       room = room.lower()
@@ -299,6 +334,12 @@ class database:
         else:
           database.update_default_user( user )
         return database.wl[user]
+      else:
+        if user not in database.wl_anons:
+          database.new_anon( user )
+        else:
+          database.update_default_anon( user )
+        return database.wl_anons[user]
     except:
       return "Error {}".format( tools.error_def() )
 
@@ -359,36 +400,62 @@ class database:
       return "Error {}".format( tools.error_def() )
 
   def set_lang_user(user, args):
-    u_langs = database.langs["for_users"]
-    u_user  = database.wl 
-    if user in u_user and args in u_langs:
-      u_user[user]["lang"] = args.lower()
-      return True
-    else:
-      return False
+    try:
+      u_langs = database.langs["for_users"]
+      info    = database.take_user( user )
+      u_user  = database.wl
+      u_anon  = database.wl_anons
+      if args:
+        if user in u_user or user in u_anon:
+          if args in u_langs:
+            info["lang"] = args.lower().split()[0]
+            return True
+          else:
+            return False
+        else:
+          return False
+      else:
+        return None
+    except:
+      return "Error {}".format( tools.error_def() )
 
   def set_lang_room(room, args):
-    u_langs = database.langs["for_rooms"]
-    u_room  = database.rooms
-    if room in u_room and args in u_langs:
-      u_room[room]["lang"] = args.lower()
-      return True
-    else:
-      return False
-
-  def set_nick_user(user, n_nick):
     try:
-      info = database.take_user( user.name )
-      t    = database.take_lang_user( info["lang"], "nick_set_answer" )
-      if n_nick:
-        if len(n_nick) < 26:
-          nick_s = info["nick"] = n_nick
-          return t[0].format( tools.user_showname( user.name ) )
+      u_langs = database.langs["for_rooms"]
+      info    = database.take_room( room )
+      u_room  = database.rooms
+      if args:
+        if room in u_room and args in u_langs:
+          if args in u_langs:
+            info["lang"] = args.lower().split()[0]
+            return True
+          else:
+            return False
         else:
-          return t[3]
+          return False
       else:
-        nick_s = info["nick"] if info["nick"] else t[1]
-        return t[2].format( nick_s )
+        return None
+    except:
+      return "Error {}".format( tools.error_def() )
+
+  def set_nick_user(lang, user_, n_nick):
+    try:
+      info = database.take_user( user_ )
+      t    = database.take_lang_user( lang, "nick_set_answer" )
+      u_user  = database.wl
+      u_anon  = database.wl_anons
+      if user_ in u_user or user_ in u_anon:
+        if n_nick:
+          if len(n_nick) < 26:
+            nick_s = info["nick"] = n_nick
+            return t[0].format( tools.user_showname( user_ ) )
+          else:
+            return t[3]
+        else:
+          nick_s = info["nick"] if info["nick"] else t[1]
+          return t[2].format( nick_s )
+      else:
+        return False
     except:
       return "Error {}".format( tools.error_def() )
 

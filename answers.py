@@ -33,7 +33,7 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
       dicr       = config.database.take_room( "for_pm" )
     dic          = config.database.take_user( username )
 
-    if username in config.database.wl:
+    if username in config.database.wl or username in config.database.wl_anons:
       if dic["nick"]:
         nick     = "{2}[{0} - {1}]{3}".format( usershowname, dic["nick"],
                                               config.styles_bot.titles_style,

@@ -41,7 +41,7 @@ def main_file():
     config.files.delete_pycache()
     config.database.save_all()
     config.style_print.clear_print()
-    example_bot_v.setTimeout( 1, example_bot_v.stop )
+    example_bot_v.setTimeout( 3, example_bot_v.stop )
 
 if __name__ == "__main__":
   main_file()

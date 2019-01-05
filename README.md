@@ -8,6 +8,7 @@ _**Based on RoryMercury797.**_ - _**ONLY WORKS IN PYTHON 3**_ - _**Using Megach.
 - Multiple connections in rooms.
 - Local data in json.
 - Auto save data.
+- Anons support.
 
 ## Instructions:
 - Download Python 3 of [Python](https://www.python.org/downloads/).

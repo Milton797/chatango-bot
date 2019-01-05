@@ -37,7 +37,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
       dicr       = config.database.take_room( "for_pm" )
     dic          = config.database.take_user( username )
 
-    if username in config.database.wl:
+    if username in config.database.wl or username in config.database.wl_anons:
       if dic["nick"]:
         nick     = "{2}[{0} - {1}]{3}".format( usershowname, dic["nick"],
                                               config.styles_bot.titles_style,
@@ -99,7 +99,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
           answer = e
 
     elif cmd in ["cmd", "cmds", "comandos", "commands"]:
-      answer = ", ".join( sorted( "lang rlang nick simi join yt gis".split() ) ).title() 
+      answer = ", ".join( sorted( "lang rlang nick simi join leave yt gis".split() ) ).title() 
 
     elif cmd in ["lang"]:
       try:
@@ -138,7 +138,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     elif cmd in ["nick"]:
       try:
-        answer = config.database.set_nick_user( user, args )
+        answer = config.database.set_nick_user( dic["lang"], user.name, args )
       except Exception as e:
         answer = "Error: {}".format( e )
 
@@ -184,7 +184,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
       except Exception as e:
         answer = "Error: {}".format( e )
 
-    elif cmd in ["desconecta", "disconnect"]:
+    elif cmd in ["desconecta", "disconnect", "leave"]:
       try:
         t = config.database.take_lang_user( dic["lang"], "leave_room_answer" )
         a = args.split()[0].lower() if args else ""

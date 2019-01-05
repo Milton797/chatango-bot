@@ -20,15 +20,19 @@ import urllib.request as urlreq, urllib.parse as urlparse
 
 class online_defs:
 
-  google_api_keys = "AIzaSyBMTWDhEs6fJWFfAWRFIiSi2-1wrNYPrak"
-  cx              = "016691744310932434282:ccsiku01yu0"
+  apis = {"google_apis": "PUT_YOUR_API_KEY_HERE",
+          "cx": "PUT_YOUR_CX_KEY_HERE"}
+
+# https://developers.google.com/youtube/v3/getting-started # Create your yt 
+# https://cse.google.com/cse - Create your cx
+# https://developers.google.com/custom-search/v1/overview - Create your cs for gis in proyect main of yt
 
   def youtube(lang, p_video: str = ""):
       try:
         lang     = config.database.take_lang_user( lang, "youtube_answer" )
         video    = urlparse.quote( p_video.replace( " ", "+" ) )
         url      = ( "https://www.googleapis.com/youtube/v3/"
-                    "search?q=/{}&part=snippet&key={}" ).format( video, online_defs.google_api_keys )
+                    "search?q=/{}&part=snippet&key={}" ).format( video, online_defs.apis["google_apis"] )
         with urlreq.urlopen( url ) as open_url:
           decode   = open_url.read().decode("utf-8")
           data     = json.loads( decode )
@@ -59,8 +63,8 @@ class online_defs:
       image  = urlparse.quote( image.replace( " ", "+" ) )
       url    = ("https://www.googleapis.com/customsearch/v1?q={}&num={}"
                 "&safe=active&cx={}&key={}&searchType=image")
-      url    = url.format( image, str(save_total), online_defs.cx, 
-                          online_defs.google_api_keys )
+      url    = url.format( image, str(save_total), online_defs.apis["cx"], 
+                          online_defs.apis["google_apis"] )
       with urlreq.urlopen( url ) as open_url:
         decode            = open_url.read().decode("utf-8")
         data              = json.loads( decode )
