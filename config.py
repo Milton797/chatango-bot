@@ -541,8 +541,7 @@ class tools:
         room.message( str( respuesta_ ), html = bool( html_ ),
                      canal = int( canal_ ), badge = int( badge_ ) )
       elif room.name is "PM":
-        respuesta_ = respuesta_.replace("&", "&amp;")
-        room.message( str( user_ ), str( respuesta_ ),
+        room.message( str( user_ ), str( respuesta_ ).replace("&", "&amp;"),
                      html = bool( html_ ) )
     except:
       return "Error: {}".format( str( tools.error_def() ) )

@@ -55,9 +55,9 @@ class Example_Bot(megach.RoomManager):
 
       if username in config.database.wl or username in config.database.wl_anons:
         if dic["nick"]:
-          nick     = "{2}[{0} - {1}]{3}".format( usershowname, dic["nick"],
-                                                config.styles_bot.titles_style,
-                                                config.styles_bot.normal_style )
+          nick     = "{2}[ {0} - {1} ]{3}".format( usershowname, dic["nick"],
+                                                  config.styles_bot.titles_style,
+                                                  config.styles_bot.normal_style )
         else:
           nick     = "{1} @{0}{2}".format( usershowname,
                                           config.styles_bot.titles_style,
