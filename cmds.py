@@ -57,24 +57,24 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
           html = False
           locals().update( globals() )
           try:
-            answer = str( eval(args, locals() ) )
+            answer = str( eval( args, locals() ) )
           except Exception as ev:
             try:
-              answer = str( exec(args, locals() ) )
+              answer = str( exec( args, locals(), globals() ) )
             except Exception as ex:
-              if str(ev) == str(ex):
+              if str( ev ) == str( ex ):
                 err = ev
               else:
-                err = "{}, {}".format(ev, ex)
+                err = "{}, {}".format( ev, ex )
               answer = "Eval Error: {}".format( err )
 
     elif cmd in ["ex", "exec"]:
       if username in config.globals_v.evalp:
         if args:
           html = False
+          locals().update( globals() )
           try:
-            locals().update( globals() )
-            answer = str( exec(args), locals() )
+            answer = str( exec( args, locals(), globals() ) )
           except Exception as ex:
             answer = "Exec Error: {}".format( ex )
 
