@@ -68,7 +68,8 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
 
       for x in config.bot.bot_names + [ room_pm_u.lower() ]:
         if x in splitted:
-          simi_petition = "".join( simi_args.split( x ) ).strip()
+          simi_petition = __import__( "re" ).sub( 
+                                                  "[ ]?@\w+\: `.*?`[ ]?|[ ]?@\w+[ ]?", "", args )
           mention = True
           break
 
