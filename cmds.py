@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ###########
@@ -88,7 +88,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
             config.files.import_special_defs( self )
           answer = a
         except Exception as e:
-          answer = e
+          answer = "Error: {}".format( str( e ) )
 
     elif cmd in ["megach"]:
       if username in config.globals_v.evalp:
@@ -96,10 +96,17 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
           a_megach = config.files.megach_update()
           answer = a_megach
         except Exception as e:
-          answer = e
+          answer = "Error: {}".format( str( e ) )
 
     elif cmd in ["cmd", "cmds", "comandos", "commands"]:
-      answer = ", ".join( sorted( "lang rlang nick simi join leave yt gis".split() ) ).title() 
+      try:
+        if dic["lang"] == "en":
+          cmds = "lang roomlang nick simi join leave yt gis".split()
+        elif dic["lang"] == "es":
+          cmds = "lang salalang nick simi conecta desconecta yt gis".split()
+        answer = ", ".join( sorted( cmds ) ).title()
+      except Exception as e:
+        answer = "Error: {}".format( str( e ) )
 
     elif cmd in ["lang"]:
       try:
@@ -117,7 +124,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
       except Exception as e:
         answer = "Error: {}".format( e )
 
-    elif cmd in ["rlang","roomlang","langr"]:
+    elif cmd in ["rlang", "roomlang", "langr", "slang", "salalang", "langs"]:
       try:
         a = config.database.take_lang_user( dic["lang"], "set_change_lang_room" )
         if roomname is not pm.name:

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 ###########
@@ -39,12 +39,13 @@ class bot:
 
 class styles_bot:
 
-  name_color   = "000000"
-  font_color   = "000000"
-  font_face    = 1
-  font_size    = 12
-  titles_style = "<f x{}{}='{}'>".format( font_size, name_color, font_face )
-  normal_style = "<f x{}{}='{}'>".format( font_size, font_color, font_face )
+  font_styles  = { "name_color": "000000", "font_color": "000000", "font_face": 1, "font_size": 12 }
+  titles_style = "<f x{}{}='{}'>".format( font_styles["font_size"],
+                                         font_styles["name_color"],
+                                         font_styles["font_face"]  )
+  normal_style = "<f x{}{}='{}'>".format( font_styles["font_size"],
+                                         font_styles["font_color"],
+                                         font_styles["font_face"]  )
 
 ###############################################################################################################
 
@@ -564,6 +565,7 @@ class tools:
 
   def reload(modulo):
     try:
+      database.save_all(), time.sleep( 0.5 )
       modulos_folder_bot = [ x.split(".")[0] for x in os.listdir(
                             paths.u_bot ) if x.endswith( ".py" ) ]
       if not modulo:
@@ -578,6 +580,8 @@ class tools:
         else:
           return False
     except Exception as e:
+      database.load_all()
+      files.delete_pycache()
       return "Error: {}".format( str( e ) )
  
   def user_showname(user_):
@@ -608,10 +612,10 @@ class tools:
     # Ch automatic start of variables
 
     self.enableBg()
-    self.setNameColor( styles_bot.name_color )
-    self.setFontColor( styles_bot.font_color )
-    self.setFontFace( styles_bot.font_face )
-    self.setFontSize( styles_bot.font_size )
+    self.setNameColor( styles_bot.font_styles["name_color"] )
+    self.setFontColor( styles_bot.font_styles["font_color"] )
+    self.setFontFace( styles_bot.font_styles["font_face"] )
+    self.setFontSize( styles_bot.font_styles["font_size"] )
 
   def auto_tasks():
     # Task every 15 minutes
