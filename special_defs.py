@@ -18,7 +18,7 @@ def onConnect(self, room):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_connect" )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( room.name.title() ) ) )
+                       config.style_print.user_room_style( room.name.title() ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -28,7 +28,7 @@ def onDisconnect(self, room):
       return
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_disconnect" )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( room.name.title() ) ) )
+                       config.style_print.user_room_style( room.name.title() ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -36,16 +36,25 @@ def onReconnect(self, room):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_reconnect" )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( room.name.title() ),
-                        room.attempts ) )
+                       config.style_print.user_room_style( room.name.title() ),
+                       room.attempts ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
-def onLoginFail(self, room):
+def onLoginFail(self, args):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_login_fail" )
-    print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( room.name.title() ) ) )
+    if args.name is not self.pm.name:
+      if args.name in config.database.rooms:
+        config.database.erase_room( args.name )
+        status_deleted = True
+      else:
+        status_deleted = False
+    else:
+      status_deleted = text[2].format( args.name )
+    print( text[0].format( config.style_print.time_now()[0],
+                          config.style_print.user_room_style( args.name.title() ),
+                          text[1][0] if status_deleted is not False else text[1][1] ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -53,7 +62,7 @@ def onLoginRequest(self, room):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_login_request" )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( room.name.title() ) ) )
+                       config.style_print.user_room_style( room.name.title() ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -139,7 +148,12 @@ def onDeleteUser(self, room, user, msgs):
     print( text.format( config.style_print.time_now()[0],
                        config.style_print.user_room_style( room.name.title() ),
                        config.style_print.user_room_style( u ),
-                       "\n".join( [ "%s" % x for x in reversed( msgs ) ] ) ) )
+                       "\n".join( [ "【%s】┇【%s】┇【%s】┇【%s】: %s" %
+                                 ( time.strftime( "%I:%M:%S:%p┇%d/%m/%Y", time.localtime( x.time ) ),
+                                  config.style_print.user_room_style( x.room.name.title() ),
+                                  config.style_print.user_room_style( config.tools.user_showname( x.user.name ) ),
+                                  config.style_print.channel_tipe( x ),
+                                  x ) for x in reversed( msgs ) ] ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -157,10 +171,19 @@ def onFloodBan(self, room, tiempo):
   try:
     text  = config.database.take_lang_bot( config.bot.bot_lang, "on_flood_ban" )
     print( text[0].format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( room.name.title() ),
-                       config.tools.convert_time( config.bot.bot_lang, tiempo, 3 ) ) )
+                          config.style_print.user_room_style( room.name.title() ),
+                          config.tools.convert_time( config.bot.bot_lang, tiempo, 3 ) ) )
     self.setTimeout( tiempo, print, text[1].format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( room.name.title() ) ) )
+                    config.style_print.user_room_style( room.name.title() ) ) )
+  except:
+    return "Error: {}".format( str( config.tools.error_def() ) )
+
+def onFloodBanRepeat(self, room, tiempo):
+  try:
+    text = config.database.take_lang_bot( config.bot.bot_lang, "on_flood_ban_repeat" )
+    print( text[0].format( config.style_print.time_now[0],
+                          config.user_room_style( room.name.title() ),
+                          config.tools.convert_time( config.bot.bot_lang, tiempo, 3 ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -171,7 +194,7 @@ def onPMConnect(self, pm):
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_connect" )
     u    = config.tools.user_showname( pm.currentname )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( u ) ) )
+                       config.style_print.user_room_style( u ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -182,7 +205,7 @@ def onPMDisconnect(self, pm):
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_disconnect" )
     u    = config.tools.user_showname( pm.currentname )
     print( text.format( config.style_print.time_now()[0],
-                        config.style_print.user_room_style( u ) ) )
+                       config.style_print.user_room_style( u ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -191,8 +214,8 @@ def onPMMessage(self, pm, user, message):
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_message_online" )
     u    = config.tools.user_showname( user.name )
     print( text.format( config.style_print.time_now()[0],
-                        pm.name, config.style_print.user_room_style( u ),
-                        message.body ) )
+                       pm.name, config.style_print.user_room_style( u ),
+                       message.body ) )
     config.tools.cmdspm(self, pm, user, message)
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
@@ -202,8 +225,8 @@ def onPMOfflineMessage(self, pm, user, message):
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_message_offline" )
     u    = config.tools.user_showname( user.name )
     print( text.format( config.style_print.time_now()[0],
-                        pm.name, config.style_print.user_room_style( u ),
-                        message.body ) )
+                       pm.name, config.style_print.user_room_style( u ),
+                       message.body ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -212,8 +235,8 @@ def onPMMessageSend(self, pm, user, message):
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_message_send" )
     u    = config.tools.user_showname( user.name )
     print( text.format( config.style_print.time_now()[0],
-                        pm.name, config.style_print.user_room_style( u ),
-                        message.body ) )
+                       pm.name, config.style_print.user_room_style( u ),
+                       message.body ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 

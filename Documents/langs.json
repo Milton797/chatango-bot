@@ -7,7 +7,8 @@
             "on_connect": "[{}][{}][Room_Connected]",
             "on_disconnect": "[{}][{}][Room_Disconnected]",
             "on_reconnect": "[{}][{}][Reconnected_Attempts {}]",
-            "on_login_fail": "[{}][{}][Failed_To_Login]",
+            "on_login_fail": ["[{}][{}][Failed_To_Login][Try_Delete_Room][Status]: {}",
+                              ["Yes.", "No."], "[It´s not a room]: {}"],
             "on_join": "[{}][{}][{}][User_Connected]",
             "on_leave": "[{}][{}][{}][User_Disconnected]",
             "on_anon_join": "[{}][{}][{}][Anon_Conectado]",
@@ -16,7 +17,7 @@
             "on_user_logout": "[{}][{}][{}][User_Logout]",
             "on_anon_login": "[{}][{}][{}][Anon_Login]",
             "on_message_delete": "[{}][{}][{}][Message_Deleted]: {}",
-            "on_message_delete_user": "[{}][{}][{}][User_Deleted]: {}",
+            "on_message_delete_user": "[{}][{}][{}][User_Deleted]:\n{}",
             "on_pm_connect": "[{}][{}][Connected_to_PM]",
             "on_pm_disconnect": "[{}][{}][Disconnected_from_PM]",
             "on_pm_message_online": "[{}][{}_Online][{}]: {}",
@@ -28,6 +29,7 @@
             "load_data": "[{}][Data_Loaded]",
             "on_flood_repeat": "[{}][{}][Time_Remaining_For_Flood]: {}",
             "on_flood_ban": ["[{}][{}][Banned_For_Flood]: {}", "[{}][{}][Unbanned_For_Flood]"],
+            "on_flood_ban_repeat": ["[{}][{}][Ban_Flood_Repeat][Time_Remaining]: {}"],
             "on_login_request": "[{}][{}][Log_In_First]"
         },
         "es": {
@@ -37,7 +39,8 @@
             "on_connect": "[{}][{}][Sala_Conectada]",
             "on_disconnect": "[{}][{}][Sala_Desconectada]",
             "on_reconnect": "[{}][{}][Reconectado_Intentos {}]",
-            "on_login_fail": "[{}][{}][Error_Al_Iniciar_Sesión]",
+            "on_login_fail": ["[{}][{}][Error_Al_Iniciar_Sesión][Trata_De_Eliminar_Sala][Estado]: {}",
+                              ["Sí.", "No."], "[No es una sala]: {}"],
             "on_join": "[{}][{}][{}][Usuario_Conectado]",
             "on_leave": "[{}][{}][{}][Usuario_Desconectado]",
             "on_anon_join": "[{}][{}][{}][Anon_Conectado]",
@@ -46,7 +49,7 @@
             "on_user_logout": "[{}][{}][{}][Usuario_Deslogueado]",
             "on_anon_login": "[{}][{}][{}][Anon_Logueado]",
             "on_message_delete": "[{}][{}][{}][Mensaje_Eliminado]: {}",
-            "on_message_delete_user": "[{}][{}][{}][Usuario_Eliminado]: {}",
+            "on_message_delete_user": "[{}][{}][{}][Usuario_Eliminado]:\n{}",
             "on_pm_connect": "[{}][{}][Conectado_al_PM]",
             "on_pm_disconnect": "[{}][{}][Desconectado_del_PM]",
             "on_pm_message_online": "[{}][{}_En_Linea][{}]: {}",
@@ -58,6 +61,7 @@
             "load_data": "[{}][Datos_Cargados]",
             "on_flood_repeat": "[{}][{}][Tiempo_Restante_Por_Flood]: {}",
             "on_flood_ban": ["[{}][{}][Baneado_Por_Flood]: {}", "[{}][{}][Desbaneado_Por_Flood]"],
+            "on_flood_ban_repeat": ["[{}][{}][Ban_Flood_Repeat][Tiempo_Restante]: {}"],
             "on_login_request": "[{}][{}][Inicia_Sesión_Primero]"
         }
     },

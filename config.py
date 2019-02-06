@@ -76,7 +76,8 @@ class style_print:
     text   = "[{}][{}][{}][{}]: {}"
     text_i = text
     u_sho  = tools.user_showname( user.name )
-    text_f = text_i.format( style_print.time_now()[0],
+    text_f = text_i.format( time.strftime( "%I:%M:%S:%p",
+                           time.localtime( message.time ) ),
                            style_print.user_room_style( room.name.title() ),
                            style_print.user_room_style( u_sho ),
                            style_print.channel_tipe( message ),
@@ -162,7 +163,7 @@ class database:
       save_users.close()
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def save_rooms():
     try:
@@ -173,7 +174,7 @@ class database:
       save_room.close()
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def load_wl():
     try:
@@ -184,7 +185,7 @@ class database:
       load_users.close()
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def load_langs():
     try:
@@ -195,7 +196,7 @@ class database:
       load_all_langs.close()
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def load_rooms():
     try:
@@ -206,7 +207,7 @@ class database:
       load_room.close()
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def save_all():
     try:
@@ -216,7 +217,7 @@ class database:
       print( text )
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def load_all():
     try:
@@ -227,7 +228,7 @@ class database:
       print( text )
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def new_user(user):
     try:
@@ -239,7 +240,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def new_anon(anon):
     try:
@@ -250,7 +251,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def new_room(room):
     try:
@@ -261,7 +262,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def erase_user(user):
     try:
@@ -272,7 +273,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def erase_anon(anon):
     try:
@@ -283,7 +284,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def erase_room(room):
     try:
@@ -294,7 +295,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def update_default_user(user):
     try:
@@ -304,7 +305,7 @@ class database:
           database.wl[user][x] = c
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def update_default_anon(anon):
     try:
@@ -314,7 +315,7 @@ class database:
           database.wl_anons[anon][x] = c
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def update_default_room(room):
     try:
@@ -324,7 +325,7 @@ class database:
           database.rooms[room][x] = c
       return True
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def take_user(user):
     try:
@@ -342,7 +343,7 @@ class database:
           database.update_default_anon( user )
         return database.wl_anons[user]
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def take_room(room):
     try:
@@ -353,7 +354,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def take_lang_bot(lang, traduction):
     try:
@@ -368,7 +369,7 @@ class database:
         print( text )
         return text
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def take_lang_room(lang, traduction):
     try:
@@ -383,7 +384,7 @@ class database:
         print( text )
         return text
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def take_lang_user(lang, traduction):
     try:
@@ -398,7 +399,7 @@ class database:
         print( text )
         return text
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def set_lang_user(user, args):
     try:
@@ -418,7 +419,7 @@ class database:
       else:
         return None
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def set_lang_room(room, args):
     try:
@@ -437,7 +438,7 @@ class database:
       else:
         return None
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
   def set_nick_user(lang, user_, n_nick):
     try:
@@ -458,7 +459,7 @@ class database:
       else:
         return False
     except:
-      return "Error {}".format( tools.error_def() )
+      return "Error: {}".format( tools.error_def() )
 
 ###############################################################################################################
 
@@ -737,7 +738,7 @@ class simi:
           archivo_open.close()
           return True
     except:
-      return "Error {}".format( str( tools.error_def() ) )
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def search_simi(archivo, text = "", match = 1):
     try:
@@ -773,7 +774,7 @@ class simi:
           return "", ""
       archivo_open.close()
     except Exception as e:
-      return "Error {}".format( str( tools.error_def() ) )
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def answer_simi(cmd, user, **kw):
     try:
@@ -789,7 +790,7 @@ class simi:
       resultado = plantilla.safe_substitute( **kw )
       return resultado or t[1]
     except:
-      return "Error {}".format( str( tools.error_def() ) )
+      return "Error: {}".format( str( tools.error_def() ) )
 
 ######
 #Fin #
