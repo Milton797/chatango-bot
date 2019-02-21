@@ -67,10 +67,10 @@
     },
     "for_rooms": {
         "en": {
-            "on_flood_warning": ["No more 『<b>Flood/Spam</b>』", "No more 『<b>Flood/Spam</b>』 PM"],
+            "on_flood_warning": ["No more Flood/Spam", "No more Flood/Spam PM"],
         },
         "es": {
-            "on_flood_warning": ["No más 『<b>Flood/Spam</b>』", "No más 『<b>Flood/Spam</b>』 PM"],
+            "on_flood_warning": ["No más Flood/Spam", "No más Flood/Spam PM"],
         }
     },
     "for_users": {
