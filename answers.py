@@ -81,9 +81,8 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
                                "call_answers") ).format( nick )
 
       else:
-        answer = config.simi.answer_simi( simi_petition, user, nick = nick, r = "\r", 
-                                         prefix  = random.choice(config.bot.prefix),
-                                         prefix1 = random.choice(config.bot.prefix),
+        answer = config.simi.answer_simi( simi_petition, user, nick = nick, r = "\r",
+                                         prefix  = random.choice( config.bot.prefix ),
                                          name    = room_pm_u, roomn = room_pm_n )
 
 ##########

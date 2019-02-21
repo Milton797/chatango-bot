@@ -29,11 +29,12 @@ class bot:
 
   accounts    = [ ( "Acc1", "pass1" ),
                  ( "Acc2", "pass2" )     ]
-  prefix      = "% &".split()
+  prefix = "% &".split()
   bot_names   = "ejemplobot botsito examplebot".split()
   bot_lang    = "es en".split()[1]
   pm_connect  = True
   see_anons_p = True
+  see_users_p = False
 
 ###############################################################################################################
 
@@ -73,31 +74,43 @@ class paths:
 class style_print:
 
   def print_bot(self, room, user, message):
-    text   = "[{}][{}][{}][{}]: {}"
-    text_i = text
-    u_sho  = tools.user_showname( user.name )
-    text_f = text_i.format( time.strftime( "%I:%M:%S:%p",
-                           time.localtime( message.time ) ),
-                           style_print.user_room_style( room.name.title() ),
-                           style_print.user_room_style( u_sho ),
-                           style_print.channel_tipe( message ),
-                           message.body )
-    return text_f
+    try:
+      text   = "[{}][{}][{}][{}]: {}"
+      text_i = text
+      u_sho  = tools.user_showname( user.name )
+      text_f = text_i.format( time.strftime( "%I:%M:%S:%p",
+                             time.localtime( message.time ) ),
+                             style_print.user_room_style( room.name.title() ),
+                             style_print.user_room_style( u_sho ),
+                             style_print.channel_tipe( message ),
+                             message.body )
+      return text_f
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def user_room_style(room_user):
-    return "{:_^20}".format( room_user )
+    try:
+      return "{:_^20}".format( room_user )
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def channel_tipe(message):
-    text  = "{}|{}"
-    textf = text.format( {32768: "M", 2048: "B", 256: "R", 2304: "R+B", 34816: "B+M", 
-                          33024: "R+M", 34816: "B+M", 33024: "R+M", 35072: "R+A+M", 0: "N"}.get( message.channel ),
-                          {1: "SH", 2: "ST", 0: "N"}.get( message.badge ) )
-    return textf
+    try:
+      text  = "{}|{}"
+      textf = text.format( {32768: "M", 2048: "B", 256: "R", 2304: "R+B", 34816: "B+M", 
+                            33024: "R+M", 34816: "B+M", 33024: "R+M", 35072: "R+A+M", 0: "N"}.get( message.channel ),
+                            {1: "SH", 2: "ST", 0: "N"}.get( message.badge ) )
+      return textf
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def time_now():
-    t = time.strftime( "%I:%M:%S:%p", time.localtime() )
-    s = time.time()
-    return [t, s]
+    try:
+      t = time.strftime( "%I:%M:%S:%p", time.localtime() )
+      s = time.time()
+      return [t, s]
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def clear_print():
     try:
@@ -139,7 +152,8 @@ class database:
     Default_Wl = {
                    "lang": "en",
                    "lvl": 1,
-                   "nick": ""
+                   "nick": "",
+                   "prefix": { "default": "%&"}
                  }
 
     Default_Wl_Anons = Default_Wl
@@ -448,7 +462,7 @@ class database:
       u_anon  = database.wl_anons
       if user_ in u_user or user_ in u_anon:
         if n_nick:
-          if len(n_nick) < 26:
+          if len( n_nick ) < 26:
             nick_s = info["nick"] = n_nick
             return t[0].format( tools.user_showname( user_ ) )
           else:
@@ -486,33 +500,40 @@ class tools:
       u = "Windows"
     return u
 
-  def split_text(text):
+  def split_text(room, text):
     try:
-      vacio  = ""
-      vacio1 = " "
+      vacio    = ""
+      tag      = room.user.name
+
       if not text:
         return vacio, vacio, vacio
       else:
-        text = text.lstrip( vacio1 ).rstrip( vacio1 )
-
-      if len( text.split( vacio1 ) ) > 1:
-        cmd, args = text.split( vacio1, 1 )
+        text   = text.strip()
+        text_s = text.split()
+        text_l = len( text_s )
+      
+      if text_s[0].lower().startswith( "@{}".format( tag ) ):
+        cmd_prefix = text_s[0].lower()
+        cmd        = text_s[1].lower()      if text_l > 1 else ""
+        args       = " ".join( text_s[2:] ) if text_l > 1 else ""
       else:
-        cmd, args = text, vacio
-      cmd_prefix  = cmd[0]
+        cmd_prefix = text_s[0][0].lower()
+        cmd        = text_s[0][1:].lower()
+        args       = " ".join( text_s[1:] ) if text_l > 1 else ""
 
-      if len( cmd ) > 1:
-        cmd = cmd[1:].lower()
       return cmd_prefix, cmd, args
     except:
       return "Error split_text {}".format( tools.error_def() )
 
   def cmdspm(self, pm, user, message):
     try:
-      cmd_prefix, cmd, args = tools.split_text( message.body )
+      cmd_prefix, cmd, args = tools.split_text( pm, message.body )
       room = pm
       
-      if cmd and cmd_prefix in bot.prefix:
+      dic = database.take_user( user.name )
+
+      if cmd and cmd_prefix in ( "{}".format( dic["prefix"]["default"] ) 
+                                ) or cmd_prefix == "@{}".format( pm.user.name ):
         prfx = True
       else:
         prfx = False
@@ -566,7 +587,8 @@ class tools:
 
   def reload(modulo):
     try:
-      database.save_all(), time.sleep( 0.5 )
+      database.save_all()
+      time.sleep( 0.5 )
       modulos_folder_bot = [ x.split(".")[0] for x in os.listdir(
                             paths.u_bot ) if x.endswith( ".py" ) ]
       if not modulo:
@@ -600,29 +622,43 @@ class tools:
       return "Error: {}".format( str( tools.error_def() ) )
 
   def auto_start(self):
-    # Start text
+    try:
+      # Start text
 
-    text = database.take_lang_bot( bot.bot_lang, "on_init" )
-    print( text.format( style_print.time_now()[0] ) )
+      text = database.take_lang_bot( bot.bot_lang, "on_init" )
+      print( text.format( style_print.time_now()[0] ) )
 
-    # Automatic start of extra variables
+      # Automatic start of extra variables
 
-    files.import_special_defs(self)
-    style_print.console_title( "{}".format( bot.bot_names[1].upper() ) )
+      files.import_special_defs(self)
+      style_print.console_title( "{}".format( bot.bot_names[1].upper() ) )
 
-    # Ch automatic start of variables
+      # Ch automatic start of variables
 
-    self.enableBg()
-    self.setNameColor( styles_bot.font_styles["name_color"] )
-    self.setFontColor( styles_bot.font_styles["font_color"] )
-    self.setFontFace( styles_bot.font_styles["font_face"] )
-    self.setFontSize( styles_bot.font_styles["font_size"] )
+      self.enableBg()
+      self.setNameColor( styles_bot.font_styles["name_color"] )
+      self.setFontColor( styles_bot.font_styles["font_color"] )
+      self.setFontFace( styles_bot.font_styles["font_face"] )
+      self.setFontSize( styles_bot.font_styles["font_size"] )
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def auto_tasks():
-    # Task every 15 minutes
+    try:
+      # Task every 15 minutes
 
-    style_print.clear_print()
-    database.save_all()
+      style_print.clear_print()
+      database.save_all()
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
+
+  def start_conections(self, ignore = []):
+    try:
+      for x in database.rooms.keys():
+        if x not in ignore:
+          self.joinRoom( x )
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
 ###############################################################################################################
 
@@ -708,15 +744,18 @@ class files:
 class simi:
 
   def clean_text(text):
-    text = text.lower().strip()
-    limpio = {
-              "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
-              "@": "", "?": "", "!": "", ",": "", ".": "", "¿": ""
-             }
-    for y in limpio:
-      if y in text:
-        text = text.replace( y, limpio[y] )
-    return text
+    try:
+      text = text.lower().strip()
+      limpio = {
+                "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
+                "@": "", "?": "", "!": "", ",": "", ".": "", "¿": ""
+               }
+      for y in limpio:
+        if y in text:
+          text = text.replace( y, limpio[y] )
+      return text
+    except:
+      return "Error: {}".format( str( tools.error_def() ) )
 
   def create_simi(archivo, text):
     try:

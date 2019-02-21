@@ -68,11 +68,12 @@ class Example_Bot(megach.RoomManager):
 
       # Separate args
 
-      cmd_prefix, cmd, args = config.tools.split_text( message.body )
+      cmd_prefix, cmd, args = config.tools.split_text( room, message.body )
 
       # Check command usage
 
-      if cmd and cmd_prefix in config.bot.prefix:
+      if cmd and cmd_prefix in ( config.bot.prefix
+                                ) or cmd_prefix == "@{}".format( room.user.name ):
         prfx = True
         res  = cmds.answer_cmds( **locals() )
         if res:

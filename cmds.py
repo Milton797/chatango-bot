@@ -53,6 +53,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     if cmd in ["ev", "eval"]:
       if username in config.globals_v.evalp:
+        args = message.fullbody.split( " ", 1 )[1]
         if args:
           html = False
           locals().update( globals() )
@@ -70,6 +71,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     elif cmd in ["ex", "exec"]:
       if username in config.globals_v.evalp:
+        args = message.fullbody.split( " ", 1 )[1]
         if args:
           html = False
           locals().update( globals() )
@@ -145,7 +147,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     elif cmd in ["nick"]:
       try:
-        answer = config.database.set_nick_user( dic["lang"], user.name, args )
+        answer = config.database.set_nick_user( dic["lang"], username, args )
       except Exception as e:
         answer = "Error: {}".format( e )
 
@@ -204,11 +206,11 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
               self.setTimeout( 4, config.database.erase_room, a )
             elif a in config.database.rooms:
               if a not in self.roomnames:
-                config.database.erase_room(room)
+                config.database.erase_room(a)
                 answer = t[0]
               if a in config.database.rooms and a in self.roomnames:
                 self.leaveRoom( a )
-                config.database.erase_room(room)
+                config.database.erase_room( a )
                 answer = t[0]
           else:
             answer = t[2]
