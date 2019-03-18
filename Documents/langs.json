@@ -4,9 +4,9 @@
         	"start": "\n◤Bot_started◢ \n[ E_Pycache: {}  All_The_Data_Loaded: {} ]\n",
             "no_conection": "\n◤No_Internet_Connection◢",
             "keyboard_kill": "\n◤Finish_With_Keyboard_Started◢",
-            "on_connect": "[{}][{}][Room_Connected]",
-            "on_disconnect": "[{}][{}][Room_Disconnected]",
-            "on_reconnect": "[{}][{}][Reconnected_Attempts {}]",
+            "on_connect": "[{}][{}][{}][Room_Connected]",
+            "on_disconnect": "[{}][{}][{}][Room_Disconnected]",
+            "on_reconnect": "[{}][{}][{}][Reconnected_Attempts {}]",
             "on_login_fail": ["[{}][{}][Failed_To_Login][Try_Delete_Room][Status]: {}",
                               ["Yes.", "No."], "[It´s not a room]: {}"],
             "on_join": "[{}][{}][{}][User_Connected]",
@@ -36,9 +36,9 @@
             "start": "\n◤Bot_iniciado◢ \n[ E_Pycache: {}  Toda_La_Data_Cargada: {} ]\n",
             "no_conection": "\n◤No_Hay_Conexión_A_Internet◢",
             "keyboard_kill": "\n◤Terminar_Con_Teclado_Iniciado◢",
-            "on_connect": "[{}][{}][Sala_Conectada]",
-            "on_disconnect": "[{}][{}][Sala_Desconectada]",
-            "on_reconnect": "[{}][{}][Reconectado_Intentos {}]",
+            "on_connect": "[{}][{}][{}][Sala_Conectada]",
+            "on_disconnect": "[{}][{}][{}][Sala_Desconectada]",
+            "on_reconnect": "[{}][{}][{}][Reconectado_Intentos {}]",
             "on_login_fail": ["[{}][{}][Error_Al_Iniciar_Sesión][Trata_De_Eliminar_Sala][Estado]: {}",
                               ["Sí.", "No."], "[No es una sala]: {}"],
             "on_join": "[{}][{}][{}][Usuario_Conectado]",
@@ -67,10 +67,10 @@
     },
     "for_rooms": {
         "en": {
-            "on_flood_warning": ["No more Flood/Spam", "No more Flood/Spam PM"],
+            "on_flood_warning": ["No more Flood/Spam", "No more Flood/Spam PM"]
         },
         "es": {
-            "on_flood_warning": ["No más Flood/Spam", "No más Flood/Spam PM"],
+            "on_flood_warning": ["No más Flood/Spam", "No más Flood/Spam PM"]
         }
     },
     "for_users": {

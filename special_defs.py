@@ -5,9 +5,11 @@
 # Imports #
 ###########
 
-import time
 import megach
 import config
+
+import time
+import threading
 
 ####################
 #   Special_Defs   #
@@ -18,8 +20,10 @@ import config
 def onConnect(self, room):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_connect" )
+    u    = config.tools.user_showname( room.user.name )
     print( text.format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( room.name.title() ) ) )
+                       config.style_print.user_room_style( room.name.title() ),
+                       config.style_print.user_room_style( u ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -28,16 +32,20 @@ def onDisconnect(self, room):
     if not self._running:
       return
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_disconnect" )
+    u    = config.tools.user_showname( room.user.name )
     print( text.format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( room.name.title() ) ) )
+                       config.style_print.user_room_style( room.name.title() ),
+                       config.style_print.user_room_style( u ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onReconnect(self, room):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_reconnect" )
+    u    = config.tools.user_showname( room.user.name )
     print( text.format( config.style_print.time_now()[0],
                        config.style_print.user_room_style( room.name.title() ),
+                       config.style_print.user_room_style( u ),
                        room.attempts ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
@@ -165,14 +173,15 @@ def onDeleteUser(self, room, user, msgs):
 
 def onFloodWarning(self, room):
   try:
-    dic  = config.database.take_room( room.name )
-    text = config.database.take_lang_room( dic["lang"], "on_flood_warning" )
-    if room.name is not pm.name:
+    if room.name is not self.pm.name:
+      dic  = config.database.take_room( room.name )
+      text = config.database.take_lang_room( dic["lang"], "on_flood_warning" )
       room.setSilent( True )
       self.setTimeout( 30, room.setSilent, False )
-      self.setTimeout( 31, room.message, text[0], True )
+      self.setTimeout( 31, config.tools.answer_room_pm, room, text[0], True )
     else:
-      print( t[1] )
+      text = config.database.take_lang_room( config.bot.bot_lang, "on_flood_warning" )
+      print( text[1] )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -190,8 +199,8 @@ def onFloodBan(self, room, tiempo):
 def onFloodBanRepeat(self, room, tiempo):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_flood_ban_repeat" )
-    print( text[0].format( config.style_print.time_now[0],
-                          config.user_room_style( room.name.title() ),
+    print( text[0].format( config.style_print.time_now()[0],
+                          config.style_print.user_room_style( room.name.title() ),
                           config.tools.convert_time( config.bot.bot_lang, tiempo, 3 ) ) )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
@@ -220,12 +229,22 @@ def onPMDisconnect(self, pm):
 
 def onPMMessage(self, pm, user, message):
   try:
+    Process_Order = threading.Thread( target = self.Process_Order_Pm,
+                                     name = "Process_Order_Pm",
+                                     kwargs = { "pm": pm, "user": user, "message": message,
+                                               "body": message.body } )
+    Start_Process_Order = Process_Order.start()
+  except:
+    return "Error: {}".format( str( config.tools.error_def() ) )
+
+def Process_Order_Pm(self, pm = None, user = None, message = None, body = None):
+  try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_message_online" )
     u    = config.tools.user_showname( user.name )
     print( text.format( config.style_print.time_now()[0],
                        pm.name, config.style_print.user_room_style( u ),
                        message.body ) )
-    config.tools.cmdspm(self, pm, user, message)
+    config.tools.cmds_pm( self, pm, user, message )
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 

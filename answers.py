@@ -8,6 +8,7 @@
 import megach
 import config
 
+import re
 import random
 
 import os, sys
@@ -16,21 +17,28 @@ import os, sys
 # Answer autorespuestas Def #
 #############################
 
-def answer_answers(self, room = None, args = None, cmd = None, user = None, message = None, **kwargs):
+def answer_answers(self, room = None, pm = None, args = None,
+                   cmd = None, user = None, message = None, **kwargs):
   try:
 
     locals().update( kwargs )
-    pm           = self.pm
+    html         = True
+    answer       = ""
+    pmname       = pm.name
     username     = user.name
     roomname     = room.name
+    pusername    = pm.user.name
+    rusername    = room.user.name
     usershowname = config.tools.user_showname( username )
-    answer       = ""
-    html         = True
 
-    if room.name is not pm.name:
+    if roomname is not pmname:
       dicr       = config.database.take_room( roomname )
+      badge_     = room.badge
+      channel_   = message.channel
     else:
       dicr       = config.database.take_room( "for_pm" )
+      badge_     = 0
+      channel_   = 0
     dic          = config.database.take_user( username )
 
     if username in config.database.wl or username in config.database.wl_anons:
@@ -48,16 +56,16 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
 ################
 
     args = message.body.lower()
-    
+
     if args:
 
       mention   = False
       resultado = ""
 
-      room_pm_u = room.user.name
+      room_pm_u = rusername
       room_pm_n = roomname.title()
 
-      if roomname is not pm.name:
+      if roomname is not pmname:
         simi_args = args
       else:
         simi_args = "{} {}".format( config.bot.bot_names[0], args )
@@ -68,8 +76,7 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
 
       for x in config.bot.bot_names + [ room_pm_u.lower() ]:
         if x in splitted:
-          simi_petition = __import__( "re" ).sub( 
-                                                  "[ ]?@\w+\: `.*?`[ ]?|[ ]?@\w+[ ]?", "", args )
+          simi_petition = re.sub( "[ ]?@\w+\: `.*?`[ ]?|[ ]?@\w+[ ]?", "", args )
           mention = True
           break
 
@@ -90,14 +97,17 @@ def answer_answers(self, room = None, args = None, cmd = None, user = None, mess
 ##########
 
     if answer is not "":
-      config.tools.answer_room_pm( room, answer, html, user.name, message.channel )
+      config.tools.answer_room_pm( room, answer, html, username, channel_, badge_ )
 
 ##################
 # Detector error #
 ##################
 
   except:
-    return "Answers.py Error: {}".format( str( config.tools.error_def() ) )
+    if roomname in config.bot.see_error_r:
+      return "Main.py Error: {}".format( str( config.tools.error_def() ) )
+    else:
+      print( "Main.py Error: {}".format( str( config.tools.error_def() ) ) )
 
 #######
 # End #

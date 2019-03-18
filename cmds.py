@@ -20,21 +20,28 @@ import urllib.request as urlreq, urllib.parse as urlparse
 # Answer cmds def #
 ###################
 
-def answer_cmds(self, room = None, args = None, cmd = None, user = None, message = None, **kwargs):
+def answer_cmds(self, room = None, pm = None, args = None,
+                cmd = None, user = None, message = None, **kwargs):
   try:
 
     locals().update( kwargs )
-    pm           = self.pm
+    html         = True
+    answer       = ""
+    pmname       = pm.name
     username     = user.name
     roomname     = room.name
+    pusername    = pm.user.name
+    rusername    = room.user.name
     usershowname = config.tools.user_showname( username )
-    answer       = ""
-    html         = True
 
-    if room.name is not pm.name:
+    if roomname is not pmname:
       dicr       = config.database.take_room( roomname )
+      badge_     = room.badge
+      channel_   = message.channel
     else:
       dicr       = config.database.take_room( "for_pm" )
+      badge_     = 0
+      channel_   = 0
     dic          = config.database.take_user( username )
 
     if username in config.database.wl or username in config.database.wl_anons:
@@ -53,7 +60,6 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     if cmd in ["ev", "eval"]:
       if username in config.globals_v.evalp:
-        args = message.fullbody.split( " ", 1 )[1]
         if args:
           html = False
           locals().update( globals() )
@@ -71,7 +77,6 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     elif cmd in ["ex", "exec"]:
       if username in config.globals_v.evalp:
-        args = message.fullbody.split( " ", 1 )[1]
         if args:
           html = False
           locals().update( globals() )
@@ -112,36 +117,36 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 
     elif cmd in ["lang"]:
       try:
-        a = config.database.take_lang_user( dic["lang"], "set_change_lang_user" )
+        t = config.database.take_lang_user( dic["lang"], "set_change_lang_user" )
         b = ", ".join( config.database.langs["for_users"].keys() )
         if args:
           c = config.database.set_lang_user( username, args.split()[0] )
           if c is True:
-            change = a[0].format( args.split()[0].title() )
+            change = t[0].format( args.split()[0].title() )
           else:
-            change = a[1].format( b.title() )
+            change = t[1].format( b.title() )
         else:
-          change = a[1].format( b.title() )
+          change = t[1].format( b.title() )
         answer = change
       except Exception as e:
         answer = "Error: {}".format( e )
 
     elif cmd in ["rlang", "roomlang", "langr", "slang", "salalang", "langs"]:
       try:
-        a = config.database.take_lang_user( dic["lang"], "set_change_lang_room" )
-        if roomname is not pm.name:
+        t = config.database.take_lang_user( dic["lang"], "set_change_lang_room" )
+        if roomname is not pmname:
           b = ", ".join( config.database.langs["for_users"].keys() )
           if args:
             c = config.database.set_lang_room( roomname, args.split()[0] )
             if c is True:
-              change = a[0].format( args.split()[0].title() )
+              change = t[0].format( args.split()[0].title() )
             else:
-              change = a[1].format( b.title() )
+              change = t[1].format( b.title() )
           else:
-            change = a[1].format( b.title() )
+            change = t[1].format( b.title() )
           answer = change
         else:
-          answer = a[2]
+          answer = t[2]
       except Exception as e:
         answer = "Error: {}".format( e )
 
@@ -240,7 +245,7 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
         answer = "Error: {}".format( e )
 
     elif cmd in ["cmd_pm_example"]:
-      if roomname is not pm.name:
+      if roomname is not pmname:
         answer = "Hello."
       else:
         answer = "bye, o.o not available in pm"
@@ -250,15 +255,17 @@ def answer_cmds(self, room = None, args = None, cmd = None, user = None, message
 ##########
 
     if answer is not "":
-      config.tools.answer_room_pm( room, answer, html, user.name, message.channel )
+      config.tools.answer_room_pm( room, answer, html, username, channel_, badge_ )
 
 ##################
 # Detector error #
 ##################
 
   except:
-    return "Cmds.py Error: {}".format( str( config.tools.error_def() ) )
-
+    if roomname in config.bot.see_error_r:
+      return "Main.py Error: {}".format( str( config.tools.error_def() ) )
+    else:
+      print( "Main.py Error: {}".format( str( config.tools.error_def() ) ) )
 #######
 # End #
 #######

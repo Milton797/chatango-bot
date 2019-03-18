@@ -71,7 +71,8 @@ class online_defs:
         total_imgs        = []
         if int( data["queries"]["request"][0]["totalResults"] ) is not 0:
           page_info       = data["items"]
-          imgs            = [ page_info[x]["link"] for x in range( 0, save_total ) ]
+          save_total_f    = save_total if len( page_info ) >= save_total else len( page_info )
+          imgs            = [ page_info[x]["link"] for x in range( 0, save_total_f ) ]
           imgs_format     = [ ( total_imgs.append( "<b>%s)</b> %s" % ( x, c ) ) 
                                                                       ) for x, c in enumerate( imgs, start = 1 ) ]
           text            = lang[0].format( " ".join( total_imgs ) )

@@ -32,21 +32,25 @@ class Example_Bot(megach.RoomManager):
     self.setInterval( 900, config.tools.auto_tasks )
 
   def onMessage(self, room, user, message):
-    threading.Thread( target = self.Process_Order,
-                     kwargs = { "pm": self.pm, "room": room, "user": user, "message": message,
-                     "body": message.body } ).start()
+    Process_Order = threading.Thread( target = self.Process_Order,
+                                     name = "Process_Order_Rooms",
+                                     kwargs = { "pm": self.pm, "room": room, "user": user,
+                                               "message": message, "body": message.body } )
+    Start_Process_Order = Process_Order.start()
 
-  def Process_Order(self, room = None, pm = None, user = None, message = None, body = None):
-
+  def Process_Order(self, room = None, pm = None, user = None,
+                    message = None, body = None):
     try:
 
       # General variables
+      html         = True
+      answer       = ""
+      pmname       = pm.name
       username     = user.name
       roomname     = room.name
-      usershowname = config.tools.user_showname( username )
+      pusername    = pm.user.name
       rusername    = room.user.name
-      answer       = ""
-      html         = True
+      usershowname = config.tools.user_showname( username )
 
       print( config.style_print.print_bot( self, room, user, message ) )
 
@@ -73,7 +77,7 @@ class Example_Bot(megach.RoomManager):
       # Check command usage
 
       if cmd and cmd_prefix in ( config.bot.prefix
-                                ) or cmd_prefix == "@{}".format( room.user.name ):
+                                ) or cmd_prefix == "@{}".format( rusername ):
         prfx = True
         res  = cmds.answer_cmds( **locals() )
         if res:
@@ -99,14 +103,23 @@ class Example_Bot(megach.RoomManager):
 ##########
 
       if answer is not "":
-        config.tools.answer_room_pm( room, answer, html, user.name, message.channel )
+        if roomname is not pmname:
+          badge_   = room.badge
+          channel_ = message.channel
+        else:
+          badge_   = 0
+          channel_ = 0
+        config.tools.answer_room_pm( room, answer, html, username, channel_, badge_ )
 
 ##################
 # Detector error #
 ##################
 
     except:
-      return "Main.py Error: {}".format( str( config.tools.error_def() ) )
+      if roomname in config.bot.see_error_r:
+        return "Main.py Error: {}".format( str( config.tools.error_def() ) )
+      else:
+        print( "Main.py Error: {}".format( str( config.tools.error_def() ) ) )
 
 #######
 # End #

@@ -6,7 +6,12 @@
 ###########
 
 import megach
+import data_loaded
+import special_defs
 
+import imp
+import types
+import string
 import random
 import shutil
 import linecache
@@ -17,7 +22,7 @@ import time, datetime
 import urllib.request as urlreq, urllib.parse as urlparse
 
 try: from importlib import reload
-except: reload = __import__("imp").reload
+except: reload = imp.reload
 
 ##########
 # Inicio #
@@ -32,8 +37,9 @@ class bot:
   prefix = "% &".split()
   bot_names   = "ejemplobot botsito examplebot".split()
   bot_lang    = "es en".split()[1]
+  see_error_r = "pythonrpg farminggames".split()
   pm_connect  = True
-  see_anons_p = True
+  see_anons_p = False
   see_users_p = False
 
 ###############################################################################################################
@@ -97,7 +103,7 @@ class style_print:
   def channel_tipe(message):
     try:
       text  = "{}|{}"
-      textf = text.format( {32768: "M", 2048: "B", 256: "R", 2304: "R+B", 34816: "B+M", 
+      textf = text.format( {32768: "M", 2048: "B", 256: "R", 2304: "R+B", 34816: "B+M",
                             33024: "R+M", 34816: "B+M", 33024: "R+M", 35072: "R+A+M", 0: "N"}.get( message.channel ),
                             {1: "SH", 2: "ST", 0: "N"}.get( message.badge ) )
       return textf
@@ -162,11 +168,11 @@ class database:
                      "lang": "en",
                    }
 
-  wl       = {}
-  wl_anons = {}
-  rooms    = {}
+  wl       = data_loaded.wl
+  wl_anons = data_loaded.wl_anons
+  rooms    = data_loaded.rooms
 
-  langs    = {}
+  langs    = data_loaded.langs
 
   def save_wl():
     try:
@@ -341,6 +347,33 @@ class database:
     except:
       return "Error: {}".format( tools.error_def() )
 
+  def update_all_default_users():
+    try:
+      u_user = database.wl
+      for x in u_user:
+        database.update_default_user( x )
+      return True
+    except:
+      return "Error: {}".format( tools.error_def() )
+
+  def update_all_default_anons():
+    try:
+      u_anon = database.wl_anons
+      for x in u_anon:
+        database.update_default_anon( x )
+      return True
+    except:
+      return "Error: {}".format( tools.error_def() )
+
+  def update_all_default_rooms():
+    try:
+      u_room = database.rooms
+      for x in u_room:
+        database.update_default_room( x )
+      return True
+    except:
+      return "Error: {}".format( tools.error_def() )
+
   def take_user(user):
     try:
       user = user.lower()
@@ -511,7 +544,7 @@ class tools:
         text   = text.strip()
         text_s = text.split()
         text_l = len( text_s )
-      
+
       if text_s[0].lower().startswith( "@{}".format( tag ) ):
         cmd_prefix = text_s[0].lower()
         cmd        = text_s[1].lower()      if text_l > 1 else ""
@@ -525,15 +558,23 @@ class tools:
     except:
       return "Error split_text {}".format( tools.error_def() )
 
-  def cmdspm(self, pm, user, message):
+  def cmds_pm(self, pm, user, message):
     try:
-      cmd_prefix, cmd, args = tools.split_text( pm, message.body )
-      room = pm
-      
-      dic = database.take_user( user.name )
+      room         = pm
+      pmname       = pm.name
+      username     = user.name
+      roomname     = room.name
+      pusername    = pm.user.name
+      rusername    = room.user.name
+      dic          = database.take_user( username )
+      usershowname = tools.user_showname( username )
 
-      if cmd and cmd_prefix in ( "{}".format( dic["prefix"]["default"] ) 
-                                ) or cmd_prefix == "@{}".format( pm.user.name ):
+      if username is rusername or dic["lvl"] is -1:
+        return
+
+      cmd_prefix, cmd, args = tools.split_text( pm, message.body )
+
+      if cmd and cmd_prefix in bot.prefix or cmd_prefix == "@{}".format( pusername ):
         prfx = True
       else:
         prfx = False
@@ -545,12 +586,12 @@ class tools:
         args = message.body.lower()
 
         if args:
-          pm.message( user.name, __import__("answers").answer_answers( **locals() ), True )
+          pm.message( username, sys.modules["answers"].answer_answers( **locals() ), True )
 
       # cmds in pm
 
       else:
-        res  = __import__("cmds").answer_cmds( **locals() )
+        res  = sys.modules["cmds"].answer_cmds( **locals() )
         if res:
           pm.message( user, str( res ) )
 
@@ -566,6 +607,8 @@ class tools:
       elif room.name is "PM":
         room.message( str( user_ ), str( respuesta_ ).replace("&", "&amp;"),
                      html = bool( html_ ) )
+      else:
+        print( respuesta_ )
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
@@ -585,28 +628,28 @@ class tools:
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
-  def reload(modulo):
+  def reload(module):
     try:
       database.save_all()
-      time.sleep( 0.5 )
-      modulos_folder_bot = [ x.split(".")[0] for x in os.listdir(
-                            paths.u_bot ) if x.endswith( ".py" ) ]
-      if not modulo:
+      if not module:
         return False
       else:
-        for x in modulos_folder_bot:
-          if x in modulo:
-            [ ( reload( __import__( x ) ), time.sleep( 0.1 ) ) for x in modulo.split() ]
-            database.load_all()
-            files.delete_pycache()
-            return True
-        else:
-          return False
+        module_g = []
+        module_s = module.split()
+        for x in module_s:
+          try:
+            reload( sys.modules[ x ] )
+            module_g.append( ( x, True ) )
+            time.sleep( 0.01 )
+          except:
+            module_g.append( ( x, False ) )
+        database.load_all()
+        files.delete_pycache()
+        return module_g
     except Exception as e:
-      database.load_all()
       files.delete_pycache()
       return "Error: {}".format( str( e ) )
- 
+
   def user_showname(user_):
     try:
       a = megach.User.get( user_ ).showname
@@ -665,9 +708,9 @@ class tools:
 class files:
 
   def delete_file(u):
-    if os.path.exists(u):
+    if os.path.exists( u ):
       try:
-        os.remove(u)
+        os.remove( u )
         return True
       except Exception as e:
         return e
@@ -675,7 +718,7 @@ class files:
       return False
 
   def delete_files(u):
-    if os.path.exists(u):
+    if os.path.exists( u ):
       try:
         [files.delete_file( "{}{}{}".format( u, os.sep, x ) ) for x in os.listdir( u )]
         return True
@@ -685,10 +728,10 @@ class files:
       return False
 
   def delete_folder(u):
-    if os.path.exists(u):
+    if os.path.exists( u ):
       try:
-        files.delete_files(u)
-        os.removedirs(u)
+        files.delete_files( u )
+        os.removedirs( u )
         return True
       except Exception as e:
         return e
@@ -708,9 +751,8 @@ class files:
 
   def import_special_defs(self):
     try:
-      special_defs = __import__( "special_defs" )
       for x in [ z for z in dir( special_defs ) if callable( getattr( special_defs, z ) ) ]:
-        setattr( self, x, __import__( "types" ).MethodType( getattr( special_defs, x ), self ) )
+        setattr( self, x, types.MethodType( getattr( special_defs, x ), self ) )
       files.delete_pycache()
     except:
       return "Error: {}".format( str( tools.error_def() ) )
@@ -757,9 +799,8 @@ class simi:
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
-  def create_simi(archivo, text):
+  def create_simi(archivo, text, separator = "::"):
     try:
-      separator = "::"
       if not os.path.exists( archivo ):
         open( archivo, "a", encoding = "utf-8" ).close()
       else:
@@ -779,9 +820,8 @@ class simi:
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
-  def search_simi(archivo, text = "", match = 1):
+  def search_simi(archivo, text = "", match = 1, separator = "::"):
     try:
-      separator = "::"
       if not os.path.exists( archivo ):
         open( archivo, "a", encoding = "utf-8" ).close()
       with open( archivo, encoding = "utf-8" ) as archivo_open:
@@ -789,7 +829,7 @@ class simi:
         lineas = archivo_open.read().splitlines()
         matches = []
         for x in lineas:
-          if any( [z in simi.clean_text( x.split( separator, 1 )[0] ) 
+          if any( [z in simi.clean_text( x.split( separator, 1 )[0] )
                  for z in sep if len( z ) >= match] ):
             matches.append( x )
           if separator not in x:
@@ -799,7 +839,7 @@ class simi:
         filtro = []
         if matches:
           for x in matches:
-            actual = len( [ a for a in sep if a in 
+            actual = len( [ a for a in sep if a in
                          simi.clean_text( x.split( separator )[0] ).split() ] )
             if actual > mayor:
               mayor = actual
@@ -821,7 +861,7 @@ class simi:
       t    = database.take_lang_user( u, "simi_answers" )
       ruta = os.path.join( paths.u_bot, paths.u_simi )
       consulta, definicion = simi.search_simi( ruta, cmd )
-      plantilla = __import__("string").Template( definicion )
+      plantilla = string.Template( definicion )
       if "room" in kw:
         donde = kw["room"].name
       else:
