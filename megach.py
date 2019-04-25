@@ -40,11 +40,11 @@ if sys.version_info[1] < 5:
 ################################################################
 # Depuración
 ################################################################
-version = 'M1.5.23.1'
+version = 'M.1.6.5.1'
 version_info = version.split('.')
 debug = True
 ################################################################
-# Cosas del servidor, las cuentas y el manejo de mods s
+# Cosas del servidor, las cuentas y el manejo de mods
 ################################################################
 w12 = 75
 sv2 = 95
@@ -53,6 +53,11 @@ sv6 = 104
 sv8 = 101
 sv10 = 110
 sv12 = 116
+specials = {'mitvcanal': 56, 'animeultimacom': 34, 'cricket365live': 21, 'pokemonepisodeorg': 22, 'animelinkz': 20,
+            'sport24lt': 56, 'narutowire': 10, 'watchanimeonn': 22, 'cricvid-hitcric-': 51, 'narutochatt': 70,
+            'leeplarp': 27, 'stream2watch3': 56, 'ttvsports': 56, 'ver-anime': 8, 'vipstand': 21, 'eafangames': 56,
+            'soccerjumbo': 21, 'myfoxdfw': 67, 'kiiiikiii': 21, 'de-livechat': 5, 'rgsmotrisport': 51,
+            'dbzepisodeorg': 10, 'watch-dragonball': 8, 'peliculas-flv': 69, 'tvanimefreak': 54, 'tvtvanimefreak': 54}
 tsweights = [['5', w12], ['6', w12], ['7', w12], ['8', w12], ['16', w12],
              ["17", w12], ["18", w12], ["9", sv2], ["11", sv2], ["12", sv2],
              ["13", sv2], ["14", sv2], ["15", sv2], ["19", sv4], ["23", sv4],
@@ -217,6 +222,8 @@ def getServerNumber(group: str) -> int:
     @param group: String con el nombre de la sala
     @return: Número del servidor
     """
+    if group in specials:
+        return specials[group]
     group = group.replace("_", "q")
     group = group.replace("-", "q")
     fnv = float(int(group[0:min(5, len(group))], 36))
@@ -250,10 +257,14 @@ def _clean_message(msg: str, pm: bool = False) -> [str, str, str]:
     @rtype: str, str, str
     @returns: cleaned message, n tag contents, f tag contents
     """
+    # TODO check smileys for pm
     n = re.search("<n(.*?)/>", msg)
     tag = pm and 'g' or 'f'
     f = re.search("<" + tag + "(.*?)>", msg)
-    msg = re.sub("<" + tag + ".*?>", "", msg)
+    msg = re.sub("<" + tag + ".*?>" + '|"<i s=sm://(.*)"', "", msg)
+
+    wink = '<i s="sm://wink" w="14.52" h="14.52"/>'
+
     if n:
         n = n.group(1)
     if f:
@@ -312,8 +323,8 @@ def _fontFormat(text):
     formats = {'/': 'I', '\*': 'B', '_': 'U'}
     for f in formats:
         f1, f2 = set(formats.keys()) - {f}
-        # find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[^\s]){2}'.format(f1, f2, f+'{1}')
-        find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[^\s]?[{2}]?){2}[{0}{1}]?[' \
+        # find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[\S]){2}'.format(f1, f2, f+'{1}')
+        find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[\S]?[{2}]?){2}[{0}{1}]?[' \
                '\s]'.format(
                 f1, f2, f)
         for x in re.findall(find, ' ' + text + ' '):
@@ -324,15 +335,15 @@ def _fontFormat(text):
 
 
 def _videoImagePMFormat(text):
-    for x in re.findall('(https://[^\s]+outube.com/watch\?v=([^\s]+))', text):
+    for x in re.findall('(http[s]?://[^\s]+outube.com/watch\?v=([^\s]+))', text):
         original = x[0]
         cambio = '<i s="vid://yt:%s" w="126" h="96"/>' % x[1]
         text = text.replace(original, cambio)
-    for x in re.findall('(https://[^\s]+outu.be/([^\s]+))', text):
+    for x in re.findall('(http[s]?://[\S]+outu.be/([^\s]+))', text):
         original = x[0]
         cambio = '<i s="vid://yt:%s" w="126" h="96"/>' % x[1]
         text = text.replace(original, cambio)
-    for x in re.findall("http://[^\s]+?.jpg|https://[^\s]+?.jpg", text):
+    for x in re.findall("http[s]?://[\S]+?.jpg", text):
         text = text.replace(x, '<i s="%s" w="70.45" h="125"/>' % x)
     # print(text)
     return text
@@ -673,8 +684,7 @@ class WS:
         @param headers: Las cabeceras de la petición post
         @return:
         """
-        if type(data) is dict:  # TODO debería hacer esto solo si es un
-            # diccionario
+        if type(data) is dict:
             data = urlparse.urlencode(data).encode('latin-1')
         elif type(data) is str:
             data = data.encode('latin-1')
@@ -706,17 +716,17 @@ class User:
 
     def __new__(cls, name, **kwargs):
         # TODO obtener fuentes por defecto
-        if name is None:
-            name = ""
         key = name.lower()
         if key in cls._users:
             for attr, val in kwargs.items():
+                if attr == 'ip' and not val:
+                    continue  # only valid ips
                 setattr(cls._users[key], '_' + attr, val)
             return cls._users[key]
         self = super().__new__(cls)
         cls._users[key] = self
-        self._fontColor = '0'
-        self._fontFace = '0'
+        self._fontColor = '000'
+        self._fontFace = '000'
         self._fontSize = 12
         self._info = None
         self._ip = ''
@@ -877,6 +887,7 @@ class User:
 
     @property
     def premiumtime(self):
+        # TODO facilitar uso externo
         return self.info.bgtime or None
 
     sessionids = property(getSessionIds)
@@ -938,10 +949,12 @@ class Message:
         self._room = None
         self._raw = ""
         self._hasbg = False
-        self._ip = None
+        self._ip = ""
         self._unid = ""
         self._puid = ""
         self._nameColor = "000"
+        self._banword = None
+        self._flash = None
         self._fontSize = 12
         self._fontFace = "0"
         self._fontColor = "000"
@@ -976,6 +989,10 @@ class Message:
     # Properties
     ####
     @property
+    def banword(self):
+        return self._banword
+
+    @property
     def badge(self):
         """Insignia del mensaje, Ninguna, Mod, Staff son 0 1 o 2"""
         return self._badge
@@ -990,6 +1007,10 @@ class Message:
     @property
     def channel(self):
         return self._channel
+
+    @property
+    def flash(self):
+        return self._flash
 
     @property
     def fontColor(self):
@@ -1088,11 +1109,96 @@ class Message:
         """Detach the Message."""
         if self._msgid is not None and self._msgid in self._room.msgs:
             self._room.msgs.pop(self._msgid)
-            self._msgid = None  # TODO esto es necesario?
 
     def delete(self):
         """Borrar el mensaje de la sala (Si es mod)"""
         self._room.deleteMessage(self)
+
+    @classmethod
+    def parse(cls, room, args):
+        """Parse message from chatango args"""
+        # TODO corregir self
+        mtime = float(args[0]) - room._timecorrection
+        name, tname, puid, unid, msgid, ip, channel = args[1:8]
+        unknown2 = args[8]  # TODO examinar codigo de banned words
+        if unknown2 and debug:  # Banned Message
+            _savelog('[_rcmd_b][' + ':'.join(args) + ']' + unknown2)
+        rawmsg = ":".join(args[9:])
+        badge = 0
+        ispremium, flash, banword = [None] * 3
+        # TODO aplicar los flags
+        if channel and channel.isdigit():
+            channel = int(channel)
+            badge = (channel & 192) // 64
+            ispremium = channel & 4 > 0
+            hasbg = channel & 8 > 0
+            flash = channel & 16 > 0  # TODO asignar a user|message
+            banword = channel & 32 > 0  # TODO asignar a message
+            if debug and (channel & 3):
+                print(
+                    '[_rcmd_b][' + ':'.join(
+                        args) + ']Encontrado un dato desconocido, '
+                                'favor avisar al '
+                                'desarrollador', file=sys.stderr)
+                _savelog('[_rcmd_b][' + ':'.join(args) + ']')
+                # TODO Descubrir y manupular canales 1|2 (3) y 16|32(48)
+            channel = ((channel & 2048) | (channel & 256)) | (channel & 35072)
+        body, n, f = _clean_message(rawmsg)
+        nameColor = None
+        if name == "":
+            name = "#" + tname
+            if name == "#":
+                if n.isdigit():
+                    name = "!" + getAnonName(puid, n)
+                elif n and all(x in string.hexdigits for x in n):
+                    name = "!" + getAnonName(puid, str(int(n, 16)))
+                else:
+                    name = "!" + getAnonName(puid, None)
+                    # TODO fix anon bad messages
+                    if debug:
+                        _savelog('found bad message ' + ':'.join(args))
+        else:
+            if n:
+                nameColor = n
+            else:
+                nameColor = None
+        # TODO no reemplazar ip con vacio
+        user = User(name, ip=ip, isanon=name[0] in '#!')
+        # Detect changes on ip or premium data
+        if user.ispremium != ispremium:
+            evt = user._ispremium != None and ispremium != None
+            user._ispremium = ispremium
+            if evt:
+                room._callEvent("onPremiumChange", user)
+            user._info = None
+        if ip and ip != user.ip:
+            user._ip = ip
+        if f:  # TODO eliminar este else
+            fontSize, fontColor, fontFace = _parseFont(f.strip())
+        else:
+            fontColor, fontFace, fontSize = None, None, None
+        self = cls(badge=badge,
+                   body=body,
+                   channel=channel,
+                   fontColor=fontColor,
+                   fontFace=fontFace,
+                   fontSize=fontSize or '11',
+                   hasbg=hasbg,
+                   msgid=msgid,
+                   ip=ip,
+                   ispremium=ispremium,
+                   nameColor=nameColor,
+                   puid=puid,
+                   raw=rawmsg,
+                   room=room,
+                   time=mtime,
+                   unid=unid,
+                   unknown2=unknown2,
+                   user=user,
+                   flash=flash,
+                   banword=banword
+                   )
+        return self
 
 
 class WSConnection:
@@ -1673,6 +1779,7 @@ class PM(CHConnection):
             self._sendCommand("wladd", user.name)
             self._contacts.add(user)
             self._callEvent("onPMContactAdd", user)
+            return True
 
     def removeContact(self, user: str):
         """Remove Contact from PM"""
@@ -1692,10 +1799,13 @@ class PM(CHConnection):
             self._blocklist.add(User(user))
             self._callEvent("onPMBlock", User(user))
 
-    def unblock(self, user):  # TODO mejorar y probar
-        """unblock a person"""
+    def unblock(self, user):
+        """Desbloquear a alguien"""
+        if isinstance(user, User):
+            user = user.name
         if user in self._blocklist:
-            self._sendCommand("unblock", user.name)
+            self._sendCommand("unblock", user)
+            return True
 
     def track(self, user):
         """
@@ -1719,26 +1829,10 @@ class PM(CHConnection):
         except:
             return [None] * 3
 
-    def checkOnline(self, user):  # TODO borrar este def viejo checkOnline
-        """return True if online, False if offline, None if unknown"""
-        if user in self._status:
-            return self._status[user][1]
-        else:
-            return None
-
-    def getIdle(self, user):  # TODO Borrar getIddle, el track es más seguro
-        """
-        Return last active time, time.time() if isn't idle, 0 if offline,
-        None if unknown
-        """
-        if user not in self._status:
-            return None
-        if not self._status[user][1]:
-            return 0
-        if not self._status[user][2]:
-            return time.time()
-        else:
-            return self._status[user][2]
+    def checkOnline(self, user):
+        if isinstance(user, User):
+            user = User.name  # TODO el track necesita esto?
+        return self.pm.track(user)[-1]
 
     def message(self, user, msg, html: bool = False):
         """
@@ -1754,9 +1848,7 @@ class PM(CHConnection):
             for unimsg in msg:
                 self._sendCommand("msg", user, unimsg)
                 body, nameColor, fontSize = _clean_message(unimsg, pm = True)
-                self._callEvent('onPMMessageSend',
-                                User(user),
-                                Message(
+                tmsg = Message(
                                         body = body,
                                         nameColor = nameColor,
                                         fontSize = fontSize or '11',
@@ -1766,7 +1858,9 @@ class PM(CHConnection):
                                         time = time.time(),
                                         unid = None,
                                         user = self.user
-                                        ))
+                )
+                self._callEvent('onPMMessageSend', User(user), tmsg)
+                self._history.append(tmsg)
             return True
         return False
 
@@ -1802,7 +1896,11 @@ class PM(CHConnection):
         self.disconnect()
         # self._callEvent("onKickedOff")
 
-    def _rcmd_msg(self, args):  # msg TODO
+    def _rcmd_msglexceeded(self, args):
+        # TODO terminar msglexceeded
+        print("msglexceeded", file=sys.stderr)
+
+    def _rcmd_msg(self, args):  # msg TODO unificar con Message.parse
         name = args[0] or args[1]  # Usuario o tempname
         if not name:
             name = args[2]  # Anon es unknown
@@ -1896,10 +1994,9 @@ class PM(CHConnection):
     def _rcmd_toofast(self, args):  # TODO esto solo debería parar un momento
         self.disconnect()
 
-    def _rcmd_unblocked(self, user):
+    def _rcmd_unblocked(self, args):
         """Se ha desbloqueado un usuario del pm"""
-        if isinstance(user, str):
-            user = User.get(user)
+        user = User.get(args[0])
         if user in self._blocklist:
             self._blocklist.remove(user)
             self._callEvent("onPMUnblock", user)
@@ -1958,8 +2055,6 @@ class Room(CHConnection):
                 x[0] != '_']
 
     def __init__(self, name: str, mgr: object = None, account: tuple = None):
-        # TODO , server = None, port = None, uid = None):
-
         # Configuraciones
         self._badge = 0
         self._channel = 0
@@ -2095,14 +2190,14 @@ class Room(CHConnection):
         self._flags = value
 
     @property
-    def botname(self):  # TODO anon o temp !#
+    def botname(self):
         """Nombre del bot en la sala, """
         # TODO botname o currentname
         return self.user.name
 
     @property
     def about(self):
-        return _clean_message(urlreq.unquote(self.info.about))[0] or None
+        return urlreq.unquote(self.info.about) or None
 
     @property
     def title(self):
@@ -2195,10 +2290,11 @@ class Room(CHConnection):
     def getSessionlist(self, mode = 0, memory = 0):
         """
         Regresa la lista de usuarios y su cantidad de sesiones en la sala
-        @param mode: Modo 1 (User,int), 2 (name,int) 3 (showname,int)
+        @param mode: Modo 0 (User,int), 1 (name,int) 3 (showname,int)
         @param memory: int Mensajes que se verán si se revisará el historial
         @return: list[tuple,tuple,...]
         """
+        # TODO Modo 2 para la otra opcion
         if mode < 2:
             return [(x.name if mode else x, len(x.getSessionIds(self))) for x in
                     self._getUserlist(1, memory)]
@@ -2731,6 +2827,7 @@ class Room(CHConnection):
         2=Off + BG
         3=On  + BG
         """
+        # TODO usar fuentes por defecto del usuario
         if self.owner != self.user and (
                 self.user not in self.mods or not self.modflags.get(
                 self.user.name).EDIT_GP_ANNC):
@@ -2765,88 +2862,8 @@ class Room(CHConnection):
 
     def _rcmd_b(self, args):  # TODO reducir  y unificar con rcmd_i
         # TODO el reconocimiento de otros bots en anon está incompleto
-        mtime = float(args[0]) - self._timecorrection
-        name = args[1]  # Nombre de usuario si lo hay
-        tempname = args[2]  # Nombre del anon si no se ha logeado
-        puid = args[3]  # Id del usuario Si no está no se debe procesar
-        unid = args[4]  # TODO Id del mensaje?
-        msgnum = args[5]  # Número del mensaje Si no está no se debe procesar
-        ip = args[6]  # Ip del usuario
-        channel = args[7] or 0
-        unknown2 = args[8]  # TODO examinar codigo de banned words
-        if unknown2 and debug:  # Banned Message
-            _savelog('[_rcmd_b][' + ':'.join(args) + ']' + unknown2)
-        rawmsg = ':'.join(args[9:])
-        badge = 0
-        ispremium = False
-        hasbg = False
-        # TODO reemplazar por los flags
-        if channel and channel.isdigit():
-            channel = int(channel)
-            badge = (channel & 192) // 64
-            ispremium = channel & 4 > 0
-            hasbg = channel & 8 > 0
-            if debug and (channel & 48 or channel & 3):
-                print(
-                        '[_rcmd_b][' + ':'.join(
-                                args) + ']Encontrado un dato desconocido, '
-                                        'favor avisar al '
-                                        'desarrollador', file = sys.stderr)
-                _savelog('[_rcmd_b][' + ':'.join(args) + ']')
-                # TODO Descubrir y manupular canales 1|2 (3) y 16|32(48)
-            # Se detectan 4 canales y sus combinaciones
-            channel = ((channel & 2048) | (channel & 256)) | (channel & 35072)
-        body, n, f = _clean_message(rawmsg)
-        if name == "":
-            nameColor = None
-            name = "#" + tempname
-            if name == "#":
-                # name=[u.name for u in self.userlist if u.sessionids==p]
-                if n.isdigit():
-                    name = "!" + getAnonName(puid, n)
-                elif n and all(x in string.hexdigits for x in n):
-                    name = "!" + getAnonName(puid, str(int(n, 16)))
-                else:
-                    name = "!" + getAnonName(puid, None)
-                    # TODO fix anon bad messages
-                    if debug:
-                        _savelog('found bad message ' + ':'.join(args))
-        else:
-            if n:
-                nameColor = n
-            else:
-                nameColor = None
-        user = User(name, ip=ip, isanon=name[0] in '#!')
-        # Detect changes on ip or premium data
-        if user.ispremium != ispremium:
-            user._info = None
-        if ip and ip != user.ip:
-            user._ip = ip
-
-        if f:
-            fontSize, fontColor, fontFace = _parseFont(f.strip())
-        else:
-            fontColor, fontFace, fontSize = None, None, None
-        msg = Message(badge = badge,
-                      body = body,
-                      channel = channel,
-                      fontColor = fontColor,
-                      fontFace = fontFace,
-                      fontSize = fontSize or '11',
-                      hasbg = hasbg,
-                      mnum = msgnum,
-                      ip = ip,
-                      ispremium = ispremium,
-                      nameColor = nameColor,
-                      puid = puid,
-                      raw = rawmsg,
-                      room = self,
-                      time = mtime,
-                      unid = unid,
-                      unknown2 = unknown2,
-                      user = user
-                      )
-        self._mqueue[msgnum] = msg
+        msg = Message.parse(self, args)
+        self._mqueue[msg.msgid] = msg
 
     def _rcmd_badalias(self, args):
         """TODO _rcmd_badalias mal inicio de sesión sin clave"""
@@ -2922,9 +2939,10 @@ class Room(CHConnection):
         if len(self._history) < 20 and not self._nomore:
             self._sendCommand('get_more:20:0')
 
-    def _rcmd_deleteall(self, args):  # TODO
-        user = None
-        msgs = list()
+    def _rcmd_deleteall(self, args):
+        """Mensajes han sido borrados"""
+        user = None  # usuario borrado
+        msgs = list()  # mensajes borrados
         for msgid in args:
             msg = self._msgs.get(msgid)
             if msg and msg in self._history:
@@ -3000,62 +3018,10 @@ class Room(CHConnection):
         self._callEvent('onFlagsUpdate')
 
     def _rcmd_i(self, args):  # TODO
-        mtime = float(args[0]) - self._correctiontime
-        name = args[1]
-        tname = args[2]
-        puid = args[3]
-        unid = args[4]
-        msgid = args[5]
-        ip = args[6]  # TODO espacio 8
-        channel = args[7]
-        rawmsg = ":".join(args[9:])
-        msg, n, f = _clean_message(rawmsg)
-        badge = 0
-        if channel and channel.isdigit():
-            channel = int(channel)
-            badge = (channel & 192) // 64
-            channel = ((channel & 2048) | (channel & 256)) | (channel & 35072)
-        if name == "":
-            nameColor = None
-            name = "#" + tname
-            if name == "#":
-                # name=[u.name for u in self.userlist if u.sessionids==p]
-                if n.isdigit():
-                    name = "!" + getAnonName(puid, n)
-                else:
-                    # Hay anons con bots que envian malos
-                    # mensajes y pueden producir fallos
-                    return  # TODO En esos casos el mensaje no se muestra ni
-                    #  en el chat
-        else:
-            if n:
-                nameColor = _parseNameColor(n)
-            else:
-                nameColor = None
-        user = User(name)
-        # Create an anonymous message and queue it because msgid is unknown.
-        if f:
-            fontColor, fontFace, fontSize = _parseFont(f)
-        else:
-            fontColor, fontFace, fontSize = None, None, None
-        msg = Message(
-                badge = badge,
-                body = msg,
-                fontColor = fontColor,
-                fontFace = fontFace,
-                fontSize = fontSize,
-                nameColor = nameColor,
-                msgid = msgid,
-                puid = puid,
-                raw = rawmsg,
-                room = self,
-                time = mtime,
-                unid = unid,
-                user = user
-                )
+        msg = Message.parse(self, args)
         if len(self._history) <= self._history.maxlen:
             self._history.appendleft(msg)
-            self._callEvent("onHistoryMessage", user, msg)
+            self._callEvent("onHistoryMessage", msg.user, msg)
 
     def _rcmd_inited(self, args = None):
         """
@@ -3137,7 +3103,7 @@ class Room(CHConnection):
     def _rcmd_ok(self, args):
         self._owner = User(args[0])
         self._puid = args[1]  # TODO definir puid y sessionid
-        self._authtype = args[2]  # TODO M=Ok, N= ? C=??
+        self._authtype = args[2]  # TODO M=Ok, N= ? C= Anon
         self._currentname = args[3]
         self._connectiontime = args[4]
         self._correctiontime = int(float(self._connectiontime) - time.time())
@@ -3151,7 +3117,8 @@ class Room(CHConnection):
             pass
         elif self._authtype == 'C':  # Login incorrecto
             self._user = User(
-                    '!' + getAnonName(self._connectiontime, self._puid))
+                '!' + getAnonName(self._puid, self._connectiontime))
+            self._currenname = self._user.name  # TODO join as anon
         elif self._authtype == 'N':
             pass
         if self.mgr:
@@ -3274,6 +3241,7 @@ class Room(CHConnection):
         self._ubw = args
         pass
 
+    # TODO _rcmd_proxybanned
     def _rcmd_unblocked(self, args):
         """Se ha quitado el ban a un usuario"""
         unid = args[0]
@@ -3330,6 +3298,9 @@ class Room(CHConnection):
         self._callEvent('onUpdateInfo')
 
 
+# TODO climited:1552105466643:
+# climited:??:command
+
 class Gestor:
     """
     Clase Base para manejar las demás conexiones
@@ -3346,7 +3317,7 @@ class Gestor:
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
 
-    def __init__(self, name: str = None, password: str = None, pm: bool = None,
+    def __init__(self, name: str = '', password: str = None, pm: bool = None,
                  accounts = None):
         self._accounts = accounts
         self._colasalas = queue.Queue()
@@ -3368,9 +3339,7 @@ class Gestor:
         self.bgmode = False
         self._pm = pm
 
-        if pm:
-            self._pm = PM(mgr = self, name = self.name,
-                          password = self.password)
+
 
     ####
     # Propiedades
@@ -3496,8 +3465,13 @@ class Gestor:
     def _joinThread(self):
         while True:
             room, account = self._colasalas.get()
-            con = Room(room, self, account)
-            self._rooms[room] = con
+            try:
+                con = Room(room, self, account)
+                self._rooms[room] = con
+            except TimeoutError as fallo:
+                print("[{0}][{1}] El servidor de la sala no responde".format(
+                    time.strftime('%I:%M:%S %p'), room), file=sys.stderr)
+                # TODO usar evento de sala cuando el server no responde
 
     def leaveRoom(self, room):
         if isinstance(room, Room):
@@ -3510,7 +3484,17 @@ class Gestor:
         """
         Poner en marcha al bot
         """
+        while self._pm == True:
+            try:
+                self._pm = PM(mgr=self, name=self.name,
+                              password=self.password)
+            except socket.gaierror as malInicio:  # En caso de que no haya internet
+                print("[{0}] No hay internet, Reintentando primera conexión en 10... ".format(
+                    time.strftime('%I:%M:%S %p')
+                ))
+                time.sleep(10)
         self.onInit()
+
         self._running = True
         self._jt = threading.Thread(target = self._joinThread,
                                     name = "Join rooms")
@@ -3583,7 +3567,7 @@ class Gestor:
         """
         task = Task(tiempo, funcion, True, *args, **kwargs)
         task.mgr = self
-        self._tasks.add(task)
+        self._tasks.add(task)  # TODO recuerda eliminar tasks obsoletos
         return task
 
     def setTimeout(self, tiempo, funcion, *args, **kwargs):
@@ -3802,6 +3786,13 @@ class Gestor:
         pass
 
     def onLogout(self, room, user, ssid):
+        """
+        Cuando un usuario sale de su cuenta en una sala
+        @param room: Sala donde ocurre el evento
+        @param user: Usuario que ha salido de su cuenta
+        @param ssid: Id de sesión que está usando el usuario
+        """
+        # TODO incluir el anon del usuario
         pass
 
     def onMessage(self, room: Room, user: User, message: Message):
@@ -4086,6 +4077,13 @@ class Gestor:
                 room._connectattempts, error),
                 file = sys.stderr)
 
+    def onPremiumChange(self, room, user):
+        """
+        Al detectar un cambio en el estado premium de un usuario
+        @param room: Sala o  pm donde ocurre 
+        @param user: Usuario que ha recibido o perdido estado premium
+        """
+        pass
 
 class RoomManager(Gestor):
     """

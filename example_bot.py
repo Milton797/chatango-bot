@@ -5,17 +5,18 @@
 # Imports #
 ###########
 
-import megach
+import threading
+import warnings
+
+import answers
 import cmds
 import config
-import answers
-
-import threading
+import megach
 
 megach.debug = False
 
 if megach.debug is True:
-  __import__("warnings").simplefilter("always")
+  warnings.simplefilter("always")
 
 #################
 # Room.Mannager #
@@ -48,16 +49,19 @@ class Example_Bot(megach.RoomManager):
       pmname       = pm.name
       username     = user.name
       roomname     = room.name
-      pusername    = pm.user.name
-      rusername    = room.user.name
+      pusername = pm.user.showname.lower()
+      rusername = room.user.showname.lower()
       usershowname = config.tools.user_showname( username )
 
-      print( config.style_print.print_bot( self, room, user, message ) )
+      config.style_print.safe_print_bot(self, room, user, message)
 
       dic          = config.database.take_user( username )
       dicr         = config.database.take_room( roomname )
 
-      if username in config.database.wl or username in config.database.wl_anons:
+      if dict(config.database.wl) == {} or dict(config.database.rooms) == {}:
+        return
+
+      if username in dict(config.database.wl) or username in (config.database.wl_anons):
         if dic["nick"]:
           nick     = "{2}[ {0} - {1} ]{3}".format( usershowname, dic["nick"],
                                                   config.styles_bot.titles_style,
@@ -72,7 +76,7 @@ class Example_Bot(megach.RoomManager):
 
       # Separate args
 
-      cmd_prefix, cmd, args = config.tools.split_text( room, message.body )
+      cmd_prefix, cmd, args = config.tools.split_text(rusername, message.body)
 
       # Check command usage
 

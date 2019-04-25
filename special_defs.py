@@ -5,11 +5,11 @@
 # Imports #
 ###########
 
-import megach
+import threading
+import time
+
 import config
 
-import time
-import threading
 
 ####################
 #   Special_Defs   #
@@ -29,13 +29,12 @@ def onConnect(self, room):
 
 def onDisconnect(self, room):
   try:
-    if not self._running:
-      return
-    text = config.database.take_lang_bot( config.bot.bot_lang, "on_disconnect" )
-    u    = config.tools.user_showname( room.user.name )
-    print( text.format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( room.name.title() ),
-                       config.style_print.user_room_style( u ) ) )
+    if self._running is True:
+      text = config.database.take_lang_bot(config.bot.bot_lang, "on_disconnect")
+      u = config.tools.user_showname(room.user.name)
+      print(text.format(config.style_print.time_now()[0],
+                        config.style_print.user_room_style(room.name.title()),
+                        config.style_print.user_room_style(u)))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -54,7 +53,7 @@ def onLoginFail(self, args):
   try:
     text = config.database.take_lang_bot( config.bot.bot_lang, "on_login_fail" )
     if args.name is not self.pm.name:
-      if args.name in config.database.rooms:
+      if args.name in dict(config.database.rooms):
         config.database.erase_room( args.name )
         status_deleted = True
       else:
@@ -77,71 +76,78 @@ def onLoginRequest(self, room):
 
 def onJoin(self, room, user, ssid):
   try:
-    if config.bot.see_users_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_join" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_users_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_join")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onLeave(self, room, user, ssid):
   try:
-    if config.bot.see_users_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_leave" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_users_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_leave")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onAnonJoin(self, room, user, ssid):
   try:
-    if config.bot.see_anons_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_anon_join" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_anons_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_anon_join")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onAnonLeave(self, room, user, ssid):
   try:
-    if config.bot.see_anons_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_anon_leave" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_anons_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_anon_leave")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onUserLogin(self, room, user, puid):
   try:
-    if config.bot.see_users_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_user_login" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_users_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_user_login")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onUserLogout(self, room, user, puid):
   try:
-    if config.bot.see_users_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_user_logout" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_users_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_user_logout")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
 def onAnonLogin(self, room, user, ssid):
   try:
-    if config.bot.see_anons_p is True:
-      text = config.database.take_lang_bot( config.bot.bot_lang, "on_anon_login" )
-      print( text.format( config.style_print.time_now()[0],
-                         config.style_print.user_room_style( room.name.title() ),
-                         config.style_print.user_room_style( config.tools.user_showname( user.name ) ) ) )
+    if self._running is True:
+      if config.bot.see_anons_p is True:
+        text = config.database.take_lang_bot(config.bot.bot_lang, "on_anon_login")
+        print(text.format(config.style_print.time_now()[0],
+                          config.style_print.user_room_style(room.name.title()),
+                          config.style_print.user_room_style(config.tools.user_showname(user.name))))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 
@@ -218,12 +224,11 @@ def onPMConnect(self, pm):
 
 def onPMDisconnect(self, pm):
   try:
-    if not self._running:
-      return
-    text = config.database.take_lang_bot( config.bot.bot_lang, "on_pm_disconnect" )
-    u    = config.tools.user_showname( pm.currentname )
-    print( text.format( config.style_print.time_now()[0],
-                       config.style_print.user_room_style( u ) ) )
+    if self._running is True:
+      text = config.database.take_lang_bot(config.bot.bot_lang, "on_pm_disconnect")
+      u = config.tools.user_showname(pm.currentname)
+      print(text.format(config.style_print.time_now()[0],
+                        config.style_print.user_room_style(u)))
   except:
     return "Error: {}".format( str( config.tools.error_def() ) )
 

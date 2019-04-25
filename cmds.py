@@ -5,16 +5,11 @@
 # Imports #
 ###########
 
-import megach
+import os
+
 import config
 import methods
 
-import random
-
-import os, sys
-import xml, json
-import time, datetime
-import urllib.request as urlreq, urllib.parse as urlparse
 
 ###################
 # Answer cmds def #
@@ -30,8 +25,8 @@ def answer_cmds(self, room = None, pm = None, args = None,
     pmname       = pm.name
     username     = user.name
     roomname     = room.name
-    pusername    = pm.user.name
-    rusername    = room.user.name
+    pusername = pm.user.showname.lower()
+    rusername = room.user.showname.lower()
     usershowname = config.tools.user_showname( username )
 
     if roomname is not pmname:
@@ -44,7 +39,7 @@ def answer_cmds(self, room = None, pm = None, args = None,
       channel_   = 0
     dic          = config.database.take_user( username )
 
-    if username in config.database.wl or username in config.database.wl_anons:
+    if username in dict(config.database.wl) or username in dict(config.database.wl_anons):
       if dic["nick"]:
         nick     = "{2}[ {0} - {1} ]{3}".format( usershowname, dic["nick"],
                                                 config.styles_bot.titles_style,
@@ -118,7 +113,7 @@ def answer_cmds(self, room = None, pm = None, args = None,
     elif cmd in ["lang"]:
       try:
         t = config.database.take_lang_user( dic["lang"], "set_change_lang_user" )
-        b = ", ".join( config.database.langs["for_users"].keys() )
+        b = ", ".join(list(config.database.langs["for_users"].keys()))
         if args:
           c = config.database.set_lang_user( username, args.split()[0] )
           if c is True:
@@ -135,7 +130,7 @@ def answer_cmds(self, room = None, pm = None, args = None,
       try:
         t = config.database.take_lang_user( dic["lang"], "set_change_lang_room" )
         if roomname is not pmname:
-          b = ", ".join( config.database.langs["for_users"].keys() )
+          b = ", ".join(list(config.database.langs["for_users"].keys()))
           if args:
             c = config.database.set_lang_room( roomname, args.split()[0] )
             if c is True:
@@ -179,15 +174,15 @@ def answer_cmds(self, room = None, pm = None, args = None,
         if a:
           if a == roomname:
             answer = t[0]
-          if a in config.database.rooms:
+          if a in dict(config.database.rooms):
             if a not in self.roomnames:
               self.joinRoom( a )
               answer = t[1]
-            if a in config.database.rooms and a in self.roomnames:
+            if a in dict(config.database.rooms) and a in self.roomnames:
               answer = t[5]
           else:
             r_ex = config.tools.room_user_unknow( a )
-            if r_ex is "room":
+            if r_ex is "room" and r_ex is not False:
               self.joinRoom( a )
               config.database.new_room(a)
               answer = t[2]
@@ -204,16 +199,16 @@ def answer_cmds(self, room = None, pm = None, args = None,
         a = args.split()[0].lower() if args else ""
         a = a.lstrip( " " ).rstrip( " " )
         if a:
-          if a in config.database.rooms or a in self.roomnames:
+          if a in dict(config.database.rooms) or a in self.roomnames:
             if a == roomname:
               answer = t[0]
               self.setTimeout( 3, self.leaveRoom, a )
               self.setTimeout( 4, config.database.erase_room, a )
-            elif a in config.database.rooms:
+            elif a in dict(config.database.rooms):
               if a not in self.roomnames:
                 config.database.erase_room(a)
                 answer = t[0]
-              if a in config.database.rooms and a in self.roomnames:
+              if a in dict(config.database.rooms) and a in self.roomnames:
                 self.leaveRoom( a )
                 config.database.erase_room( a )
                 answer = t[0]

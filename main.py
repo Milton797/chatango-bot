@@ -5,11 +5,11 @@
 # Imports #
 ###########
 
-import example_bot
-import config
-import methods
-
 import socket
+
+import config
+import example_bot
+
 
 #################################
 # Start the bot to pv and rooms #
@@ -25,7 +25,7 @@ def main_file():
 
     example_bot_v = example_bot.Example_Bot( accounts = config.bot.accounts, pm = config.bot.pm_connect )
 
-    config.tools.start_conections( example_bot_v, ["for_pm"] )
+    config.tools.start_connections(example_bot_v, ignore_room=["for_pm"])
 
     example_bot_v.main()
 
@@ -39,7 +39,7 @@ def main_file():
     config.files.delete_pycache()
     config.database.save_all()
     config.style_print.clear_print()
-    example_bot_v.setTimeout( 3, example_bot_v.stop )
+    example_bot_v.setTimeout(2, example_bot_v.stop)
 
   except:
 

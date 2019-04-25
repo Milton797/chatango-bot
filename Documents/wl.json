@@ -12,7 +12,10 @@
     "milton797": {
         "lang": "en",
         "lvl": 1,
-        "nick": "Creador."
+        "nick": "Creador.",
+        "prefix": {
+            "default": "%&"
+        }
     },
     "rorymercury797": {
         "lang": "en",

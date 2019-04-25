@@ -5,14 +5,12 @@
 # Imports #
 ###########
 
-import megach
+import json
+import urllib.parse as urlparse
+import urllib.request as urlreq
+
 import config
 
-import random
-
-import os, sys
-import xml, json
-import urllib.request as urlreq, urllib.parse as urlparse
 
 #########
 # Start #
@@ -23,7 +21,7 @@ class online_defs:
   apis = {"google_apis": "PUT_YOUR_API_KEY_HERE",
           "cx": "PUT_YOUR_CX_KEY_HERE"}
 
-# https://developers.google.com/youtube/v3/getting-started # Create your yt 
+  # https://developers.google.com/youtube/v3/getting-started # Create your yt
 # https://cse.google.com/cse - Create your cx
 # https://developers.google.com/custom-search/v1/overview - Create your cs for gis in proyect main of yt
 
@@ -63,8 +61,8 @@ class online_defs:
       image  = urlparse.quote( image.replace( " ", "+" ) )
       url    = ("https://www.googleapis.com/customsearch/v1?q={}&num={}"
                 "&safe=active&cx={}&key={}&searchType=image")
-      url    = url.format( image, str(save_total), online_defs.apis["cx"], 
-                          online_defs.apis["google_apis"] )
+      url = url.format(image, str(save_total), online_defs.apis["cx"],
+                       online_defs.apis["google_apis"])
       with urlreq.urlopen( url ) as open_url:
         decode            = open_url.read().decode("utf-8")
         data              = json.loads( decode )
@@ -73,8 +71,8 @@ class online_defs:
           page_info       = data["items"]
           save_total_f    = save_total if len( page_info ) >= save_total else len( page_info )
           imgs            = [ page_info[x]["link"] for x in range( 0, save_total_f ) ]
-          imgs_format     = [ ( total_imgs.append( "<b>%s)</b> %s" % ( x, c ) ) 
-                                                                      ) for x, c in enumerate( imgs, start = 1 ) ]
+          imgs_format = [(total_imgs.append("<b>%s)</b> %s" % (x, c))
+                          ) for x, c in enumerate( imgs, start = 1 )]
           text            = lang[0].format( " ".join( total_imgs ) )
           return text
         else:

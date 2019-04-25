@@ -5,13 +5,11 @@
 # Imports #
 ###########
 
-import megach
+import random
+import re
+
 import config
 
-import re
-import random
-
-import os, sys
 
 #############################
 # Answer autorespuestas Def #
@@ -27,8 +25,8 @@ def answer_answers(self, room = None, pm = None, args = None,
     pmname       = pm.name
     username     = user.name
     roomname     = room.name
-    pusername    = pm.user.name
-    rusername    = room.user.name
+    pusername = pm.user.showname.lower()
+    rusername = room.user.showname.lower()
     usershowname = config.tools.user_showname( username )
 
     if roomname is not pmname:
@@ -41,7 +39,7 @@ def answer_answers(self, room = None, pm = None, args = None,
       channel_   = 0
     dic          = config.database.take_user( username )
 
-    if username in config.database.wl or username in config.database.wl_anons:
+    if username in dict(config.database.wl) or username in dict(config.database.wl_anons):
       if dic["nick"]:
         nick     = "{2}[ {0} - {1} ]{3}".format( usershowname, dic["nick"],
                                                 config.styles_bot.titles_style,

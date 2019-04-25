@@ -5,24 +5,27 @@
 # Imports #
 ###########
 
+import json
+import linecache
+import os
+import random
+import string
+import sys
+import time
+import types
+import urllib.request as urlreq
+
 import megach
-import data_loaded
 import special_defs
 
-import imp
-import types
-import string
-import random
-import shutil
-import linecache
+if sys.version_info[0] <= 3 and sys.version_info[1] <= 3:
+  import imp
 
-import os, sys
-import xml, json
-import time, datetime
-import urllib.request as urlreq, urllib.parse as urlparse
+  reload = imp.reload
+elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
+  import importlib
 
-try: from importlib import reload
-except: reload = imp.reload
+  reload = importlib.reload
 
 ##########
 # Inicio #
@@ -69,9 +72,9 @@ class paths:
 
   u_documents   = "{0}{2}{1}{2}".format( u_bot, "Documents", os.sep )
 
+  u_wl = "{}{}".format(u_documents, "wl.json")
   u_simi        = "{}{}".format( u_documents, "simi.txt" )
   u_rooms       = "{}{}".format( u_documents, "rooms.json" )
-  u_wl          = "{}{}".format( u_documents, "wl.json" )
 
   u_langs_file  = "{}{}".format( u_documents, "langs.json" )
 
@@ -81,18 +84,32 @@ class style_print:
 
   def print_bot(self, room, user, message):
     try:
-      text   = "[{}][{}][{}][{}]: {}"
-      text_i = text
-      u_sho  = tools.user_showname( user.name )
-      text_f = text_i.format( time.strftime( "%I:%M:%S:%p",
-                             time.localtime( message.time ) ),
-                             style_print.user_room_style( room.name.title() ),
-                             style_print.user_room_style( u_sho ),
-                             style_print.channel_tipe( message ),
-                             message.body )
-      return text_f
+      if self._running is True:
+        text = "[{}][{}][{}][{}]: {}"
+        text_i = text
+        u_sho = tools.user_showname(user.name)
+        text_f = text_i.format(time.strftime("%I:%M:%S:%p",
+                                             time.localtime(message.time)),
+                               style_print.user_room_style(room.name.title()),
+                               style_print.user_room_style(u_sho),
+                               style_print.channel_tipe(message),
+                               message.body)
+        return text_f
     except:
       return "Error: {}".format( str( tools.error_def() ) )
+
+  def safe_print_bot(self, room, user, message):
+    try:
+      if self._running is True:
+        text = style_print.print_bot(self, room, user, message)
+        while True:
+          try:
+            print(text)
+            break
+          except UnicodeEncodeError as error:
+            text = "{} (UNICODE) {}".format(text[0:error.start], text[error.end:])
+    except:
+      return "Error: {}".format(str(tools.error_def()))
 
   def user_room_style(room_user):
     try:
@@ -168,11 +185,15 @@ class database:
                      "lang": "en",
                    }
 
-  wl       = data_loaded.wl
-  wl_anons = data_loaded.wl_anons
-  rooms    = data_loaded.rooms
+  ###############################################################################################################
 
-  langs    = data_loaded.langs
+  wl = dict()
+  rooms = dict()
+  wl_anons = dict()
+
+  langs = dict()
+
+  ###############################################################################################################
 
   def save_wl():
     try:
@@ -189,9 +210,9 @@ class database:
     try:
       rooms      = database.rooms
       rooms_ruta = paths.u_rooms
-      with open( rooms_ruta, "w" ) as save_room:
-        save_room.write( json.dumps( rooms, indent = 4, sort_keys = True ) )
-      save_room.close()
+      with open(rooms_ruta, "w") as save_rooms:
+        save_rooms.write(json.dumps(rooms, indent=4, sort_keys=True))
+      save_rooms.close()
       return True
     except:
       return "Error: {}".format( tools.error_def() )
@@ -222,9 +243,9 @@ class database:
     try:
       rooms      = database.rooms
       rooms_ruta = paths.u_rooms
-      with open( rooms_ruta, encoding = "utf-8" ) as load_room:
-        rooms.update( json.load( load_room, encoding = "utf-8" ) )
-      load_room.close()
+      with open(rooms_ruta, encoding="utf-8") as load_rooms:
+        rooms.update(json.load(load_rooms, encoding="utf-8"))
+      load_rooms.close()
       return True
     except:
       return "Error: {}".format( tools.error_def() )
@@ -233,7 +254,7 @@ class database:
     try:
       database.save_wl()
       database.save_rooms()
-      text = database.take_lang_bot(bot.bot_lang, "save_data").format( style_print.time_now()[0] )
+      text = database.take_lang_bot(bot.bot_lang, "save_data").format(style_print.time_now()[0])
       print( text )
       return True
     except:
@@ -241,20 +262,30 @@ class database:
 
   def load_all():
     try:
+      database.clear_all_databases()
       database.load_wl()
       database.load_rooms()
       database.load_langs()
-      text = database.take_lang_bot(bot.bot_lang, "load_data").format( style_print.time_now()[0] )
+      text = database.take_lang_bot(bot.bot_lang, "load_data").format(style_print.time_now()[0])
       print( text )
       return True
     except:
       return "Error: {}".format( tools.error_def() )
 
+  def clear_all_databases():
+    try:
+      database.wl.clear()
+      database.wl_anons.clear()
+      database.rooms.clear()
+      database.langs.clear()
+    except:
+      return "Error: {}".format(tools.error_def())
+
   def new_user(user):
     try:
       user = user.lower()
-      if user not in database.wl:
-        if user[0] not in "# !".split():
+      if user not in dict(database.wl):
+        if user[0] not in globals_v.anons:
           database.wl.update( {user: database.molds.Default_Wl.copy()} )
           return True
       else:
@@ -265,7 +296,7 @@ class database:
   def new_anon(anon):
     try:
       anon = anon.lower()
-      if anon not in database.wl_anons:
+      if anon not in dict(database.wl_anons):
         database.wl_anons.update( {anon: database.molds.Default_Wl_Anons.copy()} )
         return True
       else:
@@ -276,7 +307,7 @@ class database:
   def new_room(room):
     try:
       room = room.lower()
-      if room not in database.rooms:
+      if room not in dict(database.rooms):
         database.rooms.update( {room: database.molds.Default_Room.copy()} )
         return True
       else:
@@ -287,7 +318,7 @@ class database:
   def erase_user(user):
     try:
       user = user.lower()
-      if user in database.wl:
+      if user in dict(database.wl):
         del database.wl[user]
         return True
       else:
@@ -298,7 +329,7 @@ class database:
   def erase_anon(anon):
     try:
       anon = anon.lower()
-      if anon in database.wl_anons:
+      if anon in dict(database.wl_anons):
         del database.wl_anons[anon]
         return True
       else:
@@ -309,7 +340,7 @@ class database:
   def erase_room(room):
     try:
       room = room.lower()
-      if room in database.rooms:
+      if room in dict(database.rooms):
         del database.rooms[room]
         return True
       else:
@@ -378,13 +409,13 @@ class database:
     try:
       user = user.lower()
       if user[0] not in globals_v.anons:
-        if user not in database.wl:
+        if user not in dict(database.wl):
           database.new_user( user )
         else:
           database.update_default_user( user )
         return database.wl[user]
       else:
-        if user not in database.wl_anons:
+        if user not in dict(database.wl_anons):
           database.new_anon( user )
         else:
           database.update_default_anon( user )
@@ -395,7 +426,7 @@ class database:
   def take_room(room):
     try:
       room = room.lower()
-      if room in database.rooms:
+      if room in dict(database.rooms):
         database.update_default_room( room )
         return database.rooms[room]
       else:
@@ -452,8 +483,8 @@ class database:
     try:
       u_langs = database.langs["for_users"]
       info    = database.take_user( user )
-      u_user  = database.wl
-      u_anon  = database.wl_anons
+      u_user = dict(database.wl)
+      u_anon = dict(database.wl_anons)
       if args:
         if user in u_user or user in u_anon:
           if args in u_langs:
@@ -472,7 +503,7 @@ class database:
     try:
       u_langs = database.langs["for_rooms"]
       info    = database.take_room( room )
-      u_room  = database.rooms
+      u_room = dict(database.rooms)
       if args:
         if room in u_room and args in u_langs:
           if args in u_langs:
@@ -491,8 +522,8 @@ class database:
     try:
       info = database.take_user( user_ )
       t    = database.take_lang_user( lang, "nick_set_answer" )
-      u_user  = database.wl
-      u_anon  = database.wl_anons
+      u_user = dict(database.wl)
+      u_anon = dict(database.wl_anons)
       if user_ in u_user or user_ in u_anon:
         if n_nick:
           if len( n_nick ) < 26:
@@ -533,17 +564,16 @@ class tools:
       u = "Windows"
     return u
 
-  def split_text(room, text):
+  def split_text(user_name, text):
     try:
       vacio    = ""
-      tag      = room.user.name
+      tag = user_name
+      text = text.strip()
+      text_s = text.split()
+      text_l = len(text_s)
 
-      if not text:
+      if text_l <= 0 and not text:
         return vacio, vacio, vacio
-      else:
-        text   = text.strip()
-        text_s = text.split()
-        text_l = len( text_s )
 
       if text_s[0].lower().startswith( "@{}".format( tag ) ):
         cmd_prefix = text_s[0].lower()
@@ -564,15 +594,15 @@ class tools:
       pmname       = pm.name
       username     = user.name
       roomname     = room.name
-      pusername    = pm.user.name
-      rusername    = room.user.name
+      pusername = pm.user.showname.lower()
+      rusername = room.user.showname.lower()
       dic          = database.take_user( username )
       usershowname = tools.user_showname( username )
 
       if username is rusername or dic["lvl"] is -1:
         return
 
-      cmd_prefix, cmd, args = tools.split_text( pm, message.body )
+      cmd_prefix, cmd, args = tools.split_text(pusername, message.body)
 
       if cmd and cmd_prefix in bot.prefix or cmd_prefix == "@{}".format( pusername ):
         prfx = True
@@ -599,23 +629,30 @@ class tools:
       return "Error: {}".format( str( tools.error_def() ) )
 
   def answer_room_pm(room, respuesta_: str = "", html_: bool = False,
-                     user_: str = "", canal_: int = 0, badge_: int = 0):
+                     user_: str = "", canal_: int = 0, badge_: int = 0,
+                     reply_: bool = True):
     try:
-      if room.name is not "PM":
-        room.message( str( respuesta_ ), html = bool( html_ ),
-                     canal = int( canal_ ), badge = int( badge_ ) )
-      elif room.name is "PM":
-        room.message( str( user_ ), str( respuesta_ ).replace("&", "&amp;"),
-                     html = bool( html_ ) )
+      if reply_:
+        if room.name is not "PM":
+          room.message(str(respuesta_), html=bool(html_),
+                       canal=int(canal_), badge=int(badge_))
+        elif room.name is "PM":
+          room.message(str(user_), str(respuesta_).replace("&", "&amp;"),
+                       html=bool(html_))
+        else:
+          print(respuesta_)
       else:
-        print( respuesta_ )
+        return None
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
   def room_user_unknow(url):
     try:
       url  = "http://{}.chatango.com/".format( url.lower() )
-      data = urlreq.urlopen( url ).read().decode("utf-8")
+      try:
+        data = urlreq.urlopen(url).read().decode("utf-8")
+      except:
+        return False
       user = data.find( "buyer" ) > data.find( "seller" ) > 0 and 1 or 0
       if not user:
         user = data.find( "<title>Unknown User!</title>" ) < 0 < data.find( "</head>" ) and 2 or 0
@@ -627,6 +664,7 @@ class tools:
         return "N/A"
     except:
       return "Error: {}".format( str( tools.error_def() ) )
+
 
   def reload(module):
     try:
@@ -641,13 +679,12 @@ class tools:
             reload( sys.modules[ x ] )
             module_g.append( ( x, True ) )
             time.sleep( 0.01 )
-          except:
-            module_g.append( ( x, False ) )
+          except Exception as e:
+            module_g.append((x, False, e))
         database.load_all()
         files.delete_pycache()
         return module_g
     except Exception as e:
-      files.delete_pycache()
       return "Error: {}".format( str( e ) )
 
   def user_showname(user_):
@@ -659,7 +696,7 @@ class tools:
         else:
           f = a
       else:
-        f = a.title()
+        f = user_.title()
       return f
     except:
       return "Error: {}".format( str( tools.error_def() ) )
@@ -695,11 +732,15 @@ class tools:
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
-  def start_conections(self, ignore = []):
+  def start_connections(self, ignore_room=[], anon_room=[]):
     try:
-      for x in database.rooms.keys():
-        if x not in ignore:
+      rooms = list(database.rooms.keys())
+      for x in rooms:
+        if x not in ignore_room and x not in anon_room:
           self.joinRoom( x )
+        elif x in anon_room and x not in self.roomnames:
+          self.joinRoom(x, ["", ""])
+      return True
     except:
       return "Error: {}".format( str( tools.error_def() ) )
 
@@ -720,7 +761,7 @@ class files:
   def delete_files(u):
     if os.path.exists( u ):
       try:
-        [files.delete_file( "{}{}{}".format( u, os.sep, x ) ) for x in os.listdir( u )]
+        [files.delete_file("{}{}{}".format(u, os.sep, x)) for x in os.listdir(u)]
         return True
       except Exception as e:
         return e
