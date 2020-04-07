@@ -1,0 +1,212 @@
+{
+  "for_bot": {
+    "en": {
+      "start": "\n◤Bot_started◢ \n[ E_Pycache: {}]\n",
+      "no_conection": "\n◤No_Internet_Connection◢",
+      "keyboard_kill": "\n◤Finish_With_Keyboard_Started◢",
+      "on_connect": "[{}][{}][{}][Room_Connected]",
+      "on_disconnect": "[{}][{}][{}][Room_Disconnected]",
+      "on_reconnect": "[{}][{}][{}][Reconnected_Attempts {}]",
+      "on_login_fail": [
+        "[{}][{}][Failed_To_Login][Try_Delete_Room][Status]: {}",
+        [
+          "Yes.",
+          "No."
+        ],
+        "[It´s not a room]: {}"
+      ],
+      "on_join": "[{}][{}][{}][User_Connected]",
+      "on_leave": "[{}][{}][{}][User_Disconnected]",
+      "on_anon_join": "[{}][{}][{}][Anon_Conectado]",
+      "on_anon_leave": "[{}][{}][{}][Anon_Disconnected]",
+      "on_user_login": "[{}][{}][{}][User_Login]",
+      "on_user_logout": "[{}][{}][{}][User_Logout]",
+      "on_anon_login": "[{}][{}][{}][Anon_Login]",
+      "on_message_delete": "[{}][{}][{}][Message_Deleted]: {}",
+      "on_message_delete_user": "[{}][{}][{}][User_Deleted]:\n{}",
+      "on_pm_connect": "[{}][{}][Connected_to_PM]",
+      "on_pm_disconnect": "[{}][{}][Disconnected_from_PM]",
+      "on_pm_message_online": "Online",
+      "on_pm_message_offline": "Offline",
+      "on_pm_message_send": "Send",
+      "on_init": "[{}][On_Init_Start]",
+      "console_cleaned": "[{}][Console_Cleaned]",
+      "save_data": "[{}][Data_Saved]",
+      "load_data": "[{}][Data_Loaded]",
+      "on_flood_repeat": "[{}][{}][Time_Remaining_For_Flood]: {}",
+      "on_flood_ban": [
+        "[{}][{}][Banned_For_Flood]: {}",
+        "[{}][{}][Unbanned_For_Flood]"
+      ],
+      "on_flood_ban_repeat": [
+        "[{}][{}][Ban_Flood_Repeat][Time_Remaining]: {}"
+      ],
+      "on_login_request": "[{}][{}][Log_In_First]"
+    },
+    "es": {
+      "start": "\n◤Bot_iniciado◢ \n[ E_Pycache: {}]\n",
+      "no_conection": "\n◤No_Hay_Conexión_A_Internet◢",
+      "keyboard_kill": "\n◤Terminar_Con_Teclado_Iniciado◢",
+      "on_connect": "[{}][{}][{}][Sala_Conectada]",
+      "on_disconnect": "[{}][{}][{}][Sala_Desconectada]",
+      "on_reconnect": "[{}][{}][{}][Reconectado_Intentos {}]",
+      "on_login_fail": [
+        "[{}][{}][Error_Al_Iniciar_Sesión][Trata_De_Eliminar_Sala][Estado]: {}",
+        [
+          "Sí.",
+          "No."
+        ],
+        "[No es una sala]: {}"
+      ],
+      "on_join": "[{}][{}][{}][Usuario_Conectado]",
+      "on_leave": "[{}][{}][{}][Usuario_Desconectado]",
+      "on_anon_join": "[{}][{}][{}][Anon_Conectado]",
+      "on_anon_leave": "[{}][{}][{}][Anon_Desconectado]",
+      "on_user_login": "[{}][{}][{}][Usuario_Logeado]",
+      "on_user_logout": "[{}][{}][{}][Usuario_Deslogueado]",
+      "on_anon_login": "[{}][{}][{}][Anon_Logueado]",
+      "on_message_delete": "[{}][{}][{}][Mensaje_Eliminado]: {}",
+      "on_message_delete_user": "[{}][{}][{}][Usuario_Eliminado]:\n{}",
+      "on_pm_connect": "[{}][{}][Conectado_al_PM]",
+      "on_pm_disconnect": "[{}][{}][Desconectado_del_PM]",
+      "on_pm_message_online": "En_Linea",
+      "on_pm_message_offline": "Fuera_De_Linea",
+      "on_pm_message_send": "Enviado",
+      "on_init": "[{}][On_Init_Iniciado]",
+      "console_cleaned": "[{}][Consola_Limpiada]",
+      "save_data": "[{}][Datos_Salvados]",
+      "load_data": "[{}][Datos_Cargados]",
+      "on_flood_repeat": "[{}][{}][Tiempo_Restante_Por_Flood]: {}",
+      "on_flood_ban": [
+        "[{}][{}][Baneado_Por_Flood]: {}",
+        "[{}][{}][Desbaneado_Por_Flood]"
+      ],
+      "on_flood_ban_repeat": [
+        "[{}][{}][Ban_Flood_Repeat][Tiempo_Restante]: {}"
+      ],
+      "on_login_request": "[{}][{}][Inicia_Sesión_Primero]"
+    }
+  },
+  "for_rooms": {
+    "en": {
+      "on_flood_warning": [
+        "No more Flood/Spam",
+        "No more Flood/Spam PM"
+      ]
+    },
+    "es": {
+      "on_flood_warning": [
+        "No más Flood/Spam",
+        "No más Flood/Spam PM"
+      ]
+    }
+  },
+  "for_users": {
+    "en": {
+      "call_answers": [
+        "What's wrong (? {}",
+        "What do you want (? {}",
+        "Hi, how are you (? {}"
+      ],
+      "simi_answers": [
+        "Private Messaging.",
+        "No answer."
+      ],
+      "set_change_lang_user": [
+        "Language changed to [{}].",
+        "Select a language: {}."
+      ],
+      "set_change_lang_room": [
+        "Language of room has changed to [{}].",
+        "Select a language: {}.",
+        "Not allowed in pm."
+      ],
+      "join_room_answer": [
+        "I'm already here.",
+        "I will connect again to the room, because room it´s registered and I not there.",
+        "Added room.",
+        "That room does not exist.",
+        "No place to join.",
+        "Room already connected."
+      ],
+      "leave_room_answer": [
+        "Room deleted.",
+        "No place to leave.",
+        "Room not connected and not registered."
+      ],
+      "nick_set_answer": [
+        "Settled nick. @{}",
+        "Unmodified.",
+        "Nick: {}",
+        "Nick too long."
+      ],
+      "create_simi_answer": [
+        "Done, Response added to simi.",
+        "The format is: Question :: Your answer"
+      ],
+      "youtube_answer": [
+        "{} - <b>Title:</b> {} - <b>By:</b> {}",
+        "No results.",
+        "Nothing to search."
+      ],
+      "gis_answer": [
+        "<b>I found this:</b> {}",
+        "No results.",
+        "Nothing to search."
+      ]
+    },
+    "es": {
+      "call_answers": [
+        "Que pasa (? {}",
+        "Que quiere (? {}",
+        "Hola, como estás (? {}"
+      ],
+      "simi_answers": [
+        "Mensajería Privada.",
+        "Sin respuesta."
+      ],
+      "set_change_lang_user": [
+        "Lenguaje cambiado a [{}].",
+        "Selecciona un lenguaje: {}."
+      ],
+      "set_change_lang_room": [
+        "Lenguaje de sala cambiado a [{}].",
+        "Selecciona un lenguaje: {}.",
+        "No permitido en pm."
+      ],
+      "join_room_answer": [
+        "Ya estoy aquí.",
+        "Conectaré de nuevo a esa sala, ya que no estaba y está registrada.",
+        "Sala agregada.",
+        "Esa sala no existe.",
+        "Ningún lugar donde unirme.",
+        "Sala ya conectada."
+      ],
+      "leave_room_answer": [
+        "Sala Eliminada.",
+        "Ningún lugar del cual irme.",
+        "Sala no conectada y no registrada."
+      ],
+      "nick_set_answer": [
+        "Nick puesto. @{}",
+        "Sin modificar.",
+        "Nick: {}",
+        "Nick demasiado largo."
+      ],
+      "create_simi_answer": [
+        "Hecho, Respuesta agregada al simi.",
+        "El formato es: Pregunta :: Tú respuesta"
+      ],
+      "youtube_answer": [
+        "{} - <b>Título:</b> {} - <b>Por:</b> {}",
+        "Sin resultados.",
+        "Nada para buscar."
+      ],
+      "gis_answer": [
+        "<b>Encontré esto:</b> {}",
+        "Sin resultados.",
+        "Nada para buscar."
+      ]
+    }
+  }
+}
