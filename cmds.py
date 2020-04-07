@@ -35,6 +35,7 @@ def answer_cmds(**kwargs):
         cmd = kwargs["cmd"]
         self = kwargs["self"]
         message = kwargs["message"]
+        pm = kwargs["pm"]
 
         if cmd in ["ev", "eval"]:
             if username in config.GlobalsV.evalp:
