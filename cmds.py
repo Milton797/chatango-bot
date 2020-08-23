@@ -35,6 +35,7 @@ def answer_cmds(**kwargs):
         cmd = kwargs["cmd"]
         self = kwargs["self"]
         message = kwargs["message"]
+        pm = kwargs["pm"]
 
         if cmd in ["ev", "eval"]:
             if username in config.GlobalsV.evalp:
@@ -232,7 +233,7 @@ def answer_cmds(**kwargs):
         elif cmd in ["stop"]:
             if username in config.GlobalsV.evalp:
                 room.message("Ok")
-                self.setTimeout(2, config.Tools.stop_bot, self)
+                config.Tools.stop_bot(self)
 
         ##########
         # Answer #

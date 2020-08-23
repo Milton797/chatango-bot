@@ -39,16 +39,16 @@ if sys.version_info[1] < 5:
     html2.unescape = HTMLParser().unescape
 
 ################################################################
-# Depuración
+# Depuration
 ################################################################
-version = 'M.1.7.2'
+version = 'M.1.7.6'
 version_info = version.split('.')
 debug = True
-autoupdate = True
-path = ''
+autoupdate = True  # for special servers and tsweights
+path = ''  # get and save megach file path
 updated = 1556469390  # 2019-04-28 10:36 AM
 ################################################################
-# Cosas del servidor, las cuentas y el manejo de mods
+# Server variables
 ################################################################
 w12 = 75
 sv2 = 95
@@ -80,13 +80,33 @@ tsweights = [['5', w12], ['6', w12], ['7', w12], ['8', w12], ['16', w12],
              ["81", sv12], ["82", sv12], ["83", sv12], ["84", sv12]]
 
 
+def _checkonline(web="http://chatango.com"):
+    # TODO unir con RPOSt y borrar este def
+    host = web.split("/")[-1]
+    request = urlreq.Request(web, method='HEAD', headers={
+        "Host": host,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:79.0) Gecko/20100101 Firefox/79.0"
+    })
+    c = False
+    try:
+        c = urlreq.urlopen(request)
+        if c.status == 200:
+            return c
+    except Exception as e:
+        pass
+    return c
+
+
 def updatePath():
+    """Get this module's directory and appends to path"""
     absFilePath = os.path.abspath(__file__)  # Absolute Path of this module
     fileDir = os.path.dirname(absFilePath)  # Directory of this Module
     sys.path.append(fileDir)  # for imports
     return fileDir
 
+
 def updateServers():
+    """Updates chatango servers variable from json file or web"""
     route = os.path.join(path, 'megach.json')
     global updated
     if not os.path.exists(route):
@@ -104,9 +124,9 @@ def updateServers():
         updated = dic.get('updated') or updated
         tsweights.clear()
         tsweights.extend(dic.get('tsweights'))
-    # Update every two weeks
+    # Update every month
     try:
-        if updated < time.time() - 1209600 and autoupdate:
+        if updated < time.time() - 2409600 and autoupdate:
             import update_servers
             dic.update(update_servers.Updater().servers)
             dic.update({'updated': time.time()})
@@ -123,66 +143,76 @@ path = updatePath()
 updated = updateServers()
 _maxServernum = sum(x[1] for x in tsweights)
 
+################################################################
+# Mod, Group and other Flags
+################################################################
+# TODO missing group flag 4096. What is it?
 GroupFlags = {
-    "LIST_TAXONOMY":      1, "NOANONS": 4, "NOFLAGGING": 8, "NOCOUNTER": 16,
-    "NOIMAGES":           32, "NOLINKS": 64, "NOVIDEOS": 128,
-    "NOSTYLEDTEXT":       256, "NOLINKSCHATANGO": 512,
-    "NOBRDCASTMSGWITHBW": 1024, "RATELIMITREGIMEON": 2048,
-    "CHANNELSDISABLED":   8192, "NLP_SINGLEMSG": 16384,
-    "NLP_MSGQUEUE":       32768, "BROADCAST_MODE": 65536,
-    "CLOSED_IF_NO_MODS":  131072, "IS_CLOSED": 262144,
-    "SHOW_MOD_ICONS":     524288, "MODS_CHOOSE_VISIBLITY": 1048576,
-    "HAS_XML":            268435456, "UNSAFE": 536870912
-    }
+    "LIST_TAXONOMY": 1, "NOANONS": 4, "NOFLAGGING": 8, "NOCOUNTER": 16,
+    "NOIMAGES": 32, "NOLINKS": 64, "NOVIDEOS": 128,
+    "NOSTYLEDTEXT": 256, "NOLINKSCHATANGO": 512,
+    "NOBRDCASTMSGWITHBW": 1024, "RATELIMITREGIMEON": 2048, "UNKNOWN": 4096,
+    "CHANNELSDISABLED": 8192, "NLP_SINGLEMSG": 16384,
+    "NLP_MSGQUEUE": 32768, "BROADCAST_MODE": 65536,
+    "CLOSED_IF_NO_MODS": 131072, "IS_CLOSED": 262144,
+    "SHOW_MOD_ICONS": 524288, "MODS_CHOOSE_VISIBLITY": 1048576,
+    "HAS_XML": 268435456, "UNSAFE": 536870912
+}
 
 ModFlags = {
-    'DELETED':          1, 'EDIT_MODS': 2, 'EDIT_MOD_VISIBILITY': 4,
-    'EDIT_BW':          8, 'EDIT_RESTRICTIONS': 16, 'EDIT_GROUP': 32,
-    'SEE_COUNTER':      64, 'SEE_MOD_CHANNEL': 128, 'SEE_MOD_ACTIONS': 256,
-    'EDIT_NLP':         512, 'EDIT_GP_ANNC': 1024, 'EDIT_ADMINS': 2048,
-    'EDIT_SUPERMODS':   4096, 'NO_SENDING_LIMITATIONS': 8192, 'SEE_IPS': 16384,
-    'CLOSE_GROUP':      32768, 'CAN_BROADCAST': 65536,
+    'DELETED': 1, 'EDIT_MODS': 2, 'EDIT_MOD_VISIBILITY': 4,
+    'EDIT_BW': 8, 'EDIT_RESTRICTIONS': 16, 'EDIT_GROUP': 32,
+    'SEE_COUNTER': 64, 'SEE_MOD_CHANNEL': 128, 'SEE_MOD_ACTIONS': 256,
+    'EDIT_NLP': 512, 'EDIT_GP_ANNC': 1024, 'EDIT_ADMINS': 2048,
+    'EDIT_SUPERMODS': 4096, 'NO_SENDING_LIMITATIONS': 8192, 'SEE_IPS': 16384,
+    'CLOSE_GROUP': 32768, 'CAN_BROADCAST': 65536,
     'MOD_ICON_VISIBLE': 131072, 'IS_STAFF': 262144
-    }
+}
 
 AdminFlags = (ModFlags["EDIT_MODS"] | ModFlags["EDIT_RESTRICTIONS"] |
               ModFlags["EDIT_GROUP"] | ModFlags["EDIT_GP_ANNC"])
 
 Fonts = {
-    'arial':    0, 'comic': 1, 'georgia': 2, 'handwriting': 3, 'impact': 4,
+    'arial': 0, 'comic': 1, 'georgia': 2, 'handwriting': 3, 'impact': 4,
     'palatino': 5, 'papirus': 6, 'times': 7, 'typewriter': 8
-    }
+}
 
 MessageFlags = {
-    'IS_PREMIUM':  4, 'HAS_BG': 8, 'BADGE_SHIELD': 64, 'BADGE_STAFF': 128,
+    'IS_PREMIUM': 4, 'HAS_BG': 8, 'BADGE_SHIELD': 64, 'BADGE_STAFF': 128,
     'CHANNEL_RED': 256, 'CHANNEL_BLUE': 2048, 'CHANNEL_MOD': 32768
-    }
+}
 
 Channels = {
-    "white": 0, "red": 256, "blue": 2048, "mod": 32768
-    }  # TODO darle uso
+    "red": 256, "blue": 2048, "mod": 32768
+}
 
 Badges = {
     "shield": 64, "staff": 128
-    }  # TODO darle uso
+}
 
 ModChannels = Badges['shield'] | Badges['staff'] | Channels['mod']
 
 PRINTLOCK = threading.Lock()
 tprint = builtins.print
 
+
 def printLock(*args, **kwargs):
+    """Prints text in single thread to prevent collitions"""
     with PRINTLOCK:
         return tprint(*args, **kwargs)
 
+
 builtins.print = printLock
 
+
+# TODO check and delete
 def _savelog(message):
+    """Saves message into Log file"""
     try:
         with open(os.path.join(path, 'megach.log'), 'a') as f:
             f.writelines(str(message) + '\n')
     except Exception as e:
-        print('Error al guardar log: ' + str(e), file = sys.stderr)
+        print('Error al guardar log: ' + str(e), file=sys.stderr)
 
 
 def _genUid() -> str:
@@ -222,9 +252,7 @@ def convertPM(msg: str) -> str:
     @param msg: Mensaje con fuentes incrustadas
     @return: Mensaje con etiquetas f convertidas a g
     """
-
-    pattern = re.compile(
-            r'<f x(\d{1,2})?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})=(.*?)>')
+    pattern = re.compile(r'<f x(\d{1,2})?([a-fA-F0-9]{6}|[a-fA-F0-9]{3})=(.*?)>')
 
     def repl(match):
         s, c, f = match.groups()
@@ -234,10 +262,10 @@ def convertPM(msg: str) -> str:
             s = int(s)
         if len(c) == 6:
             c = '{:X}{:X}{:X}'.format(
-                    round(int(c[0:2], 16) / 17),  # r
-                    round(int(c[2:4], 16) / 17),  # g
-                    round(int(c[4:6], 16) / 17)  # b
-                    )
+                round(int(c[0:2], 16) / 17),  # r
+                round(int(c[2:4], 16) / 17),  # g
+                round(int(c[4:6], 16) / 17)  # b
+            )
         return '</g><g x{:02}s{}="{}">'.format(s, c, f[1:-1])
 
     return pattern.sub(repl, msg)
@@ -341,7 +369,7 @@ def _strip_html(msg: str) -> str:
         return "".join(ret)
 
 
-def _parseFont(f: str, pm = False) -> (str, str, str):
+def _parseFont(f: str, pm=False) -> (str, str, str):
     """
     Lee el contendido de un etiqueta f y regresa
     tamaño color y fuente (en ese orden)
@@ -365,13 +393,13 @@ def _parseNameColor(n: str) -> str:
 
 
 def _fontFormat(text):
+    # TODO check
+    """Converts */_ into whattsap like formats"""
     formats = {'/': 'I', '\*': 'B', '_': 'U'}
     for f in formats:
         f1, f2 = set(formats.keys()) - {f}
         # find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[\S]){2}'.format(f1, f2, f+'{1}')
-        find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[\S]?[{2}]?){2}[{0}{1}]?[' \
-               '\s]'.format(
-                f1, f2, f)
+        find = ' <?[BUI]?>?[{0}{1}]?{2}(.+?[\S]?[{2}]?){2}[{0}{1}]?[\s]'.format(f1, f2, f)
         for x in re.findall(find, ' ' + text + ' '):
             original = f[-1] + x + f[-1]
             cambio = '<' + formats[f] + '>' + x + '</' + formats[f] + '>'
@@ -379,7 +407,9 @@ def _fontFormat(text):
     return text
 
 
+# TODO check
 def _videoImagePMFormat(text):
+    """Returns text with formatted video and image for PM sending"""
     for x in re.findall('(http[s]?://[^\s]+outube.com/watch\?v=([^\s]+))', text):
         original = x[0]
         cambio = '<i s="vid://yt:%s" w="126" h="96"/>' % x[1]
@@ -390,7 +420,6 @@ def _videoImagePMFormat(text):
         text = text.replace(original, cambio)
     for x in re.findall("http[s]?://[\S]+?.jpg", text):
         text = text.replace(x, '<i s="%s" w="70.45" h="125"/>' % x)
-    # print(text)
     return text
 
 
@@ -429,6 +458,7 @@ class Task:
 
     @staticmethod
     def _tick():
+        """Check all Tasks to do their functions"""
         now = time.time()
         for task in list(Task._INSTANCES):
             try:
@@ -445,7 +475,7 @@ class Task:
             with Task._LOCK:
                 Task.ALIVE = False
 
-    def __init__(self, timeout, func = None, interval = False, *args, **kw):
+    def __init__(self, timeout, func=None, interval=False, *args, **kw):
         """
         Inicia una tarea nueva
         @param mgr: El dueño de esta tarea y el que la mantiene con vida
@@ -460,8 +490,8 @@ class Task:
         Task._INSTANCES.add(self)
         with Task._LOCK:
             if not Task.ALIVE:
-                Task._THREAD = threading.Thread(target = Task._manage,
-                                                name = 'Task Manager',
+                Task._THREAD = threading.Thread(target=Task._manage,
+                                                name='Task Manager',
                                                 )
                 Task._THREAD.daemon = True
                 Task._THREAD.start()
@@ -589,7 +619,7 @@ class WS:
         return bytes(frame)
 
     @staticmethod
-    def encode_multipart(data, files, boundary = None):
+    def encode_multipart(data, files, boundary=None):
         """
         Encodear información para peticiones multipart/form-data
         @param data: Datos a enviar (diccionario)
@@ -599,12 +629,13 @@ class WS:
         @return: String encodeado
         """
 
+        # TODO check
         def escape_quote(s):
             return s.replace('"', '\\"')
 
         if boundary is None:
             boundary = ''.join(
-                    random.choice(WS._BOUNDARY_CHARS) for x in range(30))
+                random.choice(WS._BOUNDARY_CHARS) for x in range(30))
         lineas = []
         for nombre, valor in data.items():
             lineas.extend(('--%s' % boundary,
@@ -625,9 +656,9 @@ class WS:
         lineas.extend(('--%s--' % boundary, '',))
         body = '\r\n'.join(lineas)
         headers = {
-            'Content-Type':   'multipart/form-data; boundary=%s' % boundary,
+            'Content-Type': 'multipart/form-data; boundary=%s' % boundary,
             'Content-Length': str(len(body))
-            }
+        }
         return body, headers
 
     @staticmethod
@@ -662,13 +693,13 @@ class WS:
         if isinstance(headers, (bytes, bytearray)):
             if b"\r\n\r\n" in headers:
                 headers, _ = headers.split(b"\r\n\r\n", 1)
-            headers = headers.decode(errors = 'ignore')
+            headers = headers.decode(errors='ignore')
         if isinstance(headers, str):
             headers = headers.splitlines()
         if isinstance(headers, list):
             # Convertirlo en diccionario e ignorar valores incorrectos
             headers = map((lambda x: x.split(':', 1) if len(
-                    x.split(':')) > 1 else ('', '')), headers)
+                x.split(':')) > 1 else ('', '')), headers)
             headers = {z.lower().strip(): y.strip() for z, y in headers if
                        z and y}
         return headers
@@ -690,8 +721,7 @@ class WS:
         if info[1] == WS.TEXT and info.fin:
             return payload.decode("utf-8", "replace")
         elif info[1] == WS.CLOSE:
-            return int.from_bytes(payload[:2], "big"), payload[2:].decode(
-                    "utf-8", "replace")
+            return int.from_bytes(payload[:2], "big"), payload[2:].decode("utf-8", "replace")
         return payload
 
     @staticmethod
@@ -721,7 +751,7 @@ class WS:
         return bytes(x ^ mask[i % 4] for i, x in enumerate(buffer[4:]))
 
     @staticmethod
-    def RPOST(url, data = None, headers = None):
+    def RPOST(url, data=None, headers=None):
         """
         Enviar una petición post
         @param url: La url de la consulta
@@ -729,6 +759,7 @@ class WS:
         @param headers: Las cabeceras de la petición post
         @return:
         """
+        # TODO check
         if type(data) is dict:
             data = urlparse.urlencode(data).encode('latin-1')
         elif type(data) is str:
@@ -736,8 +767,8 @@ class WS:
         if not headers:
             headers = {
                 "host": "chatango.com", "origin": "http://st.chatango.com"
-                }
-        pet = urlreq.Request(url, data = data, headers = headers)
+            }
+        pet = urlreq.Request(url, data=data, headers=headers)
         try:
             resp = urlreq.urlopen(pet)
             return resp
@@ -770,15 +801,18 @@ class User:
                 if attr == 'ip' and not val:
                     continue  # only valid ips
                 setattr(cls._users[key], '_' + attr, val)
+                cls._users[key].setName(name)
             return cls._users[key]
         self = super().__new__(cls)
         cls._users[key] = self
         self._info = None
+        ## Estilos del usuario
         self._style = None
         self._fontColor = self.style.textColor or '000'
         self._fontFace = self.style.fontFamily or '000'
         self._fontSize = self.style.fontSize or 12
         self._nameColor = self.style.nameColor or '000'
+        # IP, Premium
         self._ip = ''
         self._isanon = not len(name) or name[0] in '!#'
         self._ispremium = None
@@ -792,8 +826,8 @@ class User:
         for attr, val in kwargs.items():
             # if val is None:
             #    continue
+            # TODO change showname
             setattr(self, '_' + attr, val)
-        # TODO Más cosas del user
         return self
 
     def __dir__(self):
@@ -887,7 +921,7 @@ class User:
         """Lista de salas"""
         return [room.name for room in self._sids]
 
-    def getSessionIds(self, room = None):
+    def getSessionIds(self, room=None):
         if room:
             return self._sids.get(room, set())
         else:
@@ -903,9 +937,7 @@ class User:
         misxml = []
         for x in urls:
             try:
-                misxml.append(
-                        ET.fromstring(
-                                urlreq.urlopen(x).read().decode('latin-1')))
+                misxml.append(ET.fromstring(urlreq.urlopen(x).read().decode('latin-1')))
             except:
                 misxml.append(None)
         buscar = 'body s b l d'
@@ -961,8 +993,6 @@ class User:
         except:
             return User._STYLE(*([None] * 9))
 
-
-
     sessionids = property(getSessionIds)
 
     ####
@@ -1011,7 +1041,7 @@ class Message:
     TODO revisar
     """
 
-    def __init__(self, body = None, **kw):
+    def __init__(self, body=None, **kw):
         """
         :param kw:Parámetros del mensaje
         """
@@ -1239,7 +1269,7 @@ class Message:
         user = User(name, ip=ip, isanon=name[0] in '#!')
         # Detect changes on ip or premium data
         if user.ispremium != ispremium:
-            evt = user._ispremium != None and ispremium != None and mtime > time.time() -5
+            evt = user._ispremium is not None and ispremium is not None and mtime > time.time() - 5
             user._ispremium = ispremium
             if evt:
                 room._callEvent("onPremiumChange", user)
@@ -1277,7 +1307,7 @@ class WSConnection:
     _SAFELOCK = threading.Lock()
     _INSTANCES = set()
 
-    def __init__(self, server, port, origin, name = 'WSConnection'):
+    def __init__(self, server, port, origin, name='WSConnection'):
         self._connectiontime = 0  # Hora de inicio de la conexión
         self._correctiontime = 0  # Diferencia entre localtime y servertime
         self._connectattempts = 0
@@ -1300,7 +1330,8 @@ class WSConnection:
         self._terminator = ['\x00', '\r\n\x00']
         self._pingdata = ''
         self._fedder = None
-        self._pingTask = None
+        self._pingTask = 90
+        self._last_ping = time.time()
 
     def __del__(self):
         self._disconnect()
@@ -1314,7 +1345,7 @@ class WSConnection:
                 print('Evento no controlado ' + str(evt))
         except Exception as e:
             print("Error capturado en evento '%s':'%s'" % (evt, e),
-                  file = sys.stderr)
+                  file=sys.stderr)
 
     def _disconnect(self):
         """
@@ -1329,28 +1360,23 @@ class WSConnection:
                     x.removeSessionId(self, 0)
             self._sock = None
             self._serverheaders = b''
-            if self._pingTask:
-                self._pingTask.cancel()
             self._connected = False
 
     def connect(self) -> bool:
         """ Iniciar la conexión con el servidor y llamar a _handshake() """
         with self._tlock:
             if not self._connected:
-
                 self._connectattempts += 1
                 self._sock = socket.socket()
-                # TODO Comprobar, si no hay internet hay error acá
                 self._sock.connect((self._server, self._port))
                 self._sock.setblocking(False)
                 self._handShake()
-                self._pingTask = Task(90, self._ping, True)
                 self._connected = True
                 if not self._fedder:
                     self._fedder = threading.Thread(
                         target=self._feed,
                         name=self._name or 'WSConnection',
-                            )
+                    )
                     self._fedder.daemon = True
                     self._fedder.start()
                 return True
@@ -1361,17 +1387,21 @@ class WSConnection:
         Crea un handshake y lo guarda en las variables antes de enviarlo a
         la conexión
         """
-        self._headers = ("GET / HTTP/1.1\r\n"
-                         "Host: {}:{}\r\n"
-                         "Origin: {}\r\n"
-                         "Connection: Upgrade\r\n"
-                         "Upgrade: websocket\r\n"
-                         "Sec-WebSocket-Key: {}\r\n"
-                         "Sec-WebSocket-Version: {}\r\n"
-                         "\r\n").format(self._server, self._port, self._origin,
-                                        WS.genseckey(), WS.VERSION).encode()
-        self._wbuf = self._headers
+        self._headers = (
+            "GET / HTTP/1.1\r\n"
+            "Host: {}:{}\r\n"
+            "Origin: {}\r\n"
+            "Connection: Upgrade\r\n"
+            "Upgrade: websocket\r\n"
+            "Sec-WebSocket-Key: {}\r\n"
+            "Sec-WebSocket-Version: {}\r\n"
+            "\r\n"
+        ).format(
+            self._server, self._port, self._origin,
+            WS.genseckey(), WS.VERSION
+        ).encode('latin-1')
         self._setWriteLock(True)
+        self._wbuf = self._headers
 
     def _feed(self):
         while self._connected:
@@ -1379,11 +1409,10 @@ class WSConnection:
             try:
                 if not self._sock:
                     continue
-                rd, wr, sp = select.select([self._sock],
-                                           (self._wbuf and [
-                                               self._sock] or []),
-                                           [],
-                                           0.2)
+                self._ping()
+                rd, wr, sp = select.select(
+                    [self._sock], (self._wbuf and [self._sock] or []), [self._sock], 0.0
+                )
                 for x in wr:
                     try:
                         with self._tlock:
@@ -1404,35 +1433,40 @@ class WSConnection:
                         # TODO calificar comandos de respuesta instantanea
                         # TODO separar esos _rcmd_ y usar un único thread para ellos
                         # threading.Thread(target=self.onData, name="Process", args=(chunk,)).start()
-                    elif chunk is not None:
+                    elif chunk == b'':
                         # Conexión perdida
                         with WSConnection._SAFELOCK:
-                            if not self._serverheaders:  # Nunca se recibió
-                                # comandos de la conexión
-                                self.disconnect()
-                            else:
-                                self.reconnect()
-                                # TODO este reconnect puede bloquearse
-                                # ConnectionRefusedError
+                            # if not self._serverheaders:  # Nunca se recibió
+                            #    # comandos de la conexión
+                            #    pass #self.disconnect()
+                            # else:
+                            self.reconnect()
+                            #    # TODO este reconnect puede bloquearse
+                            #    # ConnectionRefusedError
             except socket.error as cre:  # socket.error -
                 # ConnectionResetError
                 # TODO controlar tipo de error
+                self.test = cre  # variable de depuración para android
+                self._callEvent("onConnectionLost", cre)
+                attempts = 1  # connection attempts
+                self._connectattempts = 0
                 with WSConnection._WSLOCK:
-                    self.test = cre  # variable de depuración para
-                    # android
-                    self._callEvent("onConnectionLost", cre)
-                    attempts = 1  # Intentos de
-                    self._connectattempts = 0
-                    while attempts:
-                        try:
-                            self.reconnect()
-                            attempts = 0
-                            # TODO asegurar el reinicio del contador
-                        except Exception as sgai:  # socket.gaierror:  #
-                            # En caso de que no haya internet
-                            self._callEvent('onConnectionAttempt', sgai)
-                            attempts += 1
-                            time.sleep(10)
+                    while not _checkonline():
+                        # No internet or chatango fails here
+                        self._connectattempts += 1
+                        self._callEvent('onConnectionAttempt', 'NO INTERNET or CHATANGO DOWN')
+                        attempts += 1
+                        time.sleep(10)
+                while attempts:
+                    # for this ROOM/PM only
+                    try:
+                        self.reconnect()
+                        attempts = 0
+                    except Exception as sgai:  # socket.gaierror:  #
+                        # En caso de que no haya internet
+                        self._callEvent('onConnectionAttempt', sgai)
+                        attempts += 1
+                        time.sleep(10)
 
     def _sendCommand(self, *args):
         """
@@ -1447,11 +1481,16 @@ class WSConnection:
             else:
                 terminator = self._terminator[1]
             cmd = ":".join(str(x) for x in args) + terminator
+            # print("SEND ",end="")
+            # print(cmd)
             self._write(WS.encode(cmd))
 
     def _ping(self):
-        self._sendCommand('')
-        self._callEvent('onPing')
+        new_time = time.time()
+        if (new_time - self._last_ping) >= self._pingTask:
+            self._sendCommand('')
+            self._last_ping = new_time
+            self._callEvent('onPing')
 
     def _process(self, data: str):
         """
@@ -1472,11 +1511,11 @@ class WSConnection:
                 self._callEvent('onProcessError', func, e)
                 print('[%s][%s] ERROR ON PROCESS "%s" "%s"' % (
                     time.strftime('%I:%M:%S %p'), self.name, func, e),
-                      file = sys.stderr)
+                      file=sys.stderr)
         elif debug:
             print('[{}][{:^10.10}]UNKNOWN DATA "{}"'.format(
-                    time.strftime('%I:%M:%S %p'), self.name, ':'.join(data)),
-                    file = sys.stderr)
+                time.strftime('%I:%M:%S %p'), self.name, ':'.join(data)),
+                file=sys.stderr)
 
     def _setWriteLock(self, lock: bool):
         self._wlock = lock
@@ -1528,7 +1567,7 @@ class WSConnection:
             if clave != esperada and debug:
                 if debug:
                     print('Un proxy ha enviado una respuesta en caché',
-                          file = sys.stderr)
+                          file=sys.stderr)
             self._setWriteLock(False)
 
         else:
@@ -1542,14 +1581,14 @@ class WSConnection:
                 if info.opcode == WS.CLOSE:
                     # El servidor quiere cerrar la conexión
                     print(self._name + ' El servidor ha anulado la conexión',
-                          file = sys.stderr)
+                          file=sys.stderr)
                     self._disconnect()  # TODO reconectar
                 elif info.opcode == WS.TEXT:
                     # El frame contiene datos
                     self._process(payload)
                 elif debug:
                     print('Frame no controlado: "{}"'.format(payload),
-                          file = sys.stderr)
+                          file=sys.stderr)
                 r = WS.checkFrame(self._rbuf)
 
     def reconnect(self):
@@ -1561,7 +1600,7 @@ class WSConnection:
         self._reset()
         self.connect()
 
-    def _rcmd_(self, pong = None):
+    def _rcmd_(self, pong=None):
         """Al recibir un pong"""
         self._callEvent('onPong')
 
@@ -1572,7 +1611,7 @@ class WSConnection:
         self._wlockbuf = b''  # Buffer de escritura bloqueada
         self._firstCommand = False
         self._tlock = threading.Lock()
-        self._connlock = threading.Lock()
+        self._connlock = threading.Lock()  # TODO delete lock
         self._mods = dict()
 
 
@@ -1613,7 +1652,7 @@ class CHConnection(WSConnection):
         self._correctiontime = 0  # Diferencia entre la hora local y el server
         # Por que no guardar una configuración de esto por sala?
         self._maxHistoryLength = Gestor.maxHistoryLength
-        self._history = deque(maxlen = self._maxHistoryLength)
+        self._history = deque(maxlen=self._maxHistoryLength)
         self._password = account[1]  # La clave de esta conexión
         self._user = User(account[0])
         self._logged = False
@@ -1623,8 +1662,9 @@ class CHConnection(WSConnection):
             self.connect()
 
     def connect(self):
-        super().connect()
-        self._login()
+        if super().connect():
+            # TODO must do something here (?)
+            self._login()
 
     @property
     def account(self) -> str:
@@ -1682,20 +1722,20 @@ class CHConnection(WSConnection):
                 conteo = 0
                 while espacios * 6 + particion > self.MAXLEN:
                     particion = len(
-                            msg[:particion - espacios])  # Recorrido máximo 5
+                        msg[:particion - espacios])  # Recorrido máximo 5
                     espacios = msg[:particion].count(' ') + msg[
                                                             :particion].count(
-                            '\t')
+                        '\t')
                     conteo += 1
                 if debug:  # TODO eliminar
                     print(conteo)
                 return self._messageFormat(msg[:particion],
                                            html) + self._messageFormat(
-                        msg[particion:], html)
+                    msg[particion:], html)
         fc = self.user.fontColor.lower()
         nc = self.user.nameColor
         if not html:
-            msg = html2.escape(msg, quote = False)
+            msg = html2.escape(msg, quote=False)
 
         msg = msg.replace('\n', '\r').replace('~', '&#126;')
         for x in set(re.findall('<[biu]>|</[biu]>', msg)):
@@ -1703,8 +1743,8 @@ class CHConnection(WSConnection):
         if self.name == 'PM':
             formt = '<n{}/><m v="1"><g x{:0>2.2}s{}="{}">{}</g></m>'
             fc = '{:X}{:X}{:X}'.format(*tuple(
-                    round(int(fc[i:i + 2], 16) / 17) for i in
-                    (0, 2, 4))).lower() if len(fc) == 6 else fc[:3].lower()
+                round(int(fc[i:i + 2], 16) / 17) for i in
+                (0, 2, 4))).lower() if len(fc) == 6 else fc[:3].lower()
             msg = msg.replace('&nbsp;', ' ')  # fix
             msg = _videoImagePMFormat(msg)
             if not html:
@@ -1750,7 +1790,7 @@ class CHConnection(WSConnection):
                 isinstance(self, Room) and self._owner == self.user)):
             self._sendCommand('msgbg', str(self._bgmode))
 
-    def _rcmd_show_fw(self, args = None):
+    def _rcmd_show_fw(self, args=None):
         """Sin argumentos, manda una advertencia de flood en sala/pm"""
         self._callEvent('onFloodWarning')
 
@@ -1815,9 +1855,9 @@ class PM(CHConnection):
         @return: auid
         """
         data = {
-            "user_id":     name, "password": password, "storecookie": "on",
+            "user_id": name, "password": password, "storecookie": "on",
             "checkerrors": "yes"
-            }
+        }
         resp = WS.RPOST("http://chatango.com/login", data)
         if not resp:
             return None
@@ -1916,17 +1956,17 @@ class PM(CHConnection):
             msg = self._messageFormat(str(msg), html)
             for unimsg in msg:
                 self._sendCommand("msg", user, unimsg)
-                body, nameColor, fontSize = _clean_message(unimsg, pm = True)
+                body, nameColor, fontSize = _clean_message(unimsg, pm=True)
                 tmsg = Message(
-                                        body = body,
-                                        nameColor = nameColor,
-                                        fontSize = fontSize or '11',
-                                        puid = None,
-                                        raw = unimsg,
-                                        room = self,
-                                        time = time.time(),
-                                        unid = None,
-                                        user = self.user
+                    body=body,
+                    nameColor=nameColor,
+                    fontSize=fontSize or '11',
+                    puid=None,
+                    raw=unimsg,
+                    room=self,
+                    time=time.time(),
+                    unid=None,
+                    user=self.user
                 )
                 self._callEvent('onPMMessageSend', User(user), tmsg)
                 self._history.append(tmsg)
@@ -1979,23 +2019,23 @@ class PM(CHConnection):
         if unknown2 and debug:
             _savelog('[_rcmd_msg][' + ':'.join(args) + ']')
         rawmsg = ':'.join(args[5:])  # Mensaje
-        body, n, f = _clean_message(rawmsg, pm = True)
+        body, n, f = _clean_message(rawmsg, pm=True)
         nameColor = n or None
         fontSize, fontColor, fontFace = _parseFont(f)
         msg = Message(
-                body = body,
-                fontColor = fontColor,
-                fontFace = fontFace,
-                fontSize = fontSize or '11',
-                nameColor = nameColor,
-                puid = None,
-                raw = rawmsg,
-                room = self,
-                time = mtime,
-                unid = None,
-                unknown2 = unknown2,
-                user = user
-                )
+            body=body,
+            fontColor=fontColor,
+            fontFace=fontFace,
+            fontSize=fontSize or '11',
+            nameColor=nameColor,
+            puid=None,
+            raw=rawmsg,
+            room=self,
+            time=mtime,
+            unid=None,
+            unknown2=unknown2,
+            user=user
+        )
         self._history.append(msg)
         user.history = msg
         self._callEvent("onPMMessage", user, msg)
@@ -2010,19 +2050,19 @@ class PM(CHConnection):
         if unknown2 and debug:
             _savelog('[_rcmd_msgoff][' + ':'.join(args) + ']')
         rawmsg = ':'.join(args[5:])  # Mensaje
-        body, n, f = _clean_message(rawmsg, pm = True)
+        body, n, f = _clean_message(rawmsg, pm=True)
         nameColor = n or None
         fontSize, fontColor, fontFace = _parseFont(f)
         msg = Message(
-                body = body,
-                fontColor = fontColor,
-                fontFace = fontFace,
-                fontSize = fontSize or '11',
-                nameColor = nameColor,
-                puid = None,
-                raw = rawmsg,
-                room = self,
-                time = mtime, unid = None, unknown2 = unknown2, user = user)
+            body=body,
+            fontColor=fontColor,
+            fontFace=fontFace,
+            fontSize=fontSize or '11',
+            nameColor=nameColor,
+            puid=None,
+            raw=rawmsg,
+            room=self,
+            time=mtime, unid=None, unknown2=unknown2, user=user)
         self._history.append(msg)
         self._callEvent("onPMOfflineMessage", user, msg)
 
@@ -2066,14 +2106,15 @@ class PM(CHConnection):
 
     def _rcmd_wl(self, args):
         """Lista de contactos recibida al conectarse"""
-        # TODO Revisar esta sección
+        # Restart contact list
         self._contacts = set()
+        # Iterate over each contact
         for i in range(len(args) // 4):
             name, last_on, is_on, idle = args[i * 4: i * 4 + 4]
             user = User(name)
             if last_on == "None":
-                pass  # TODO in case chatango gives a "None" as data argument
-            elif not is_on == "on":
+                last_on = 0
+            elif is_on != "on":
                 self._status[user] = [int(last_on), False, 0]
             elif idle == '0':
                 self._status[user] = [int(last_on), True, 0]
@@ -2142,11 +2183,11 @@ class Room(CHConnection):
         self._info = None
         self._owner = None
         self._unbanlist = dict()
-        self._unbanqueue = deque(maxlen = 500)
+        self._unbanqueue = deque(maxlen=500)
         self._user = None
         self._users = deque()
         self._userdict = dict()  # TODO {ssid:{user},}
-        self._userhistory = deque(maxlen = 10)  # TODO {{time: <user>},}
+        self._userhistory = deque(maxlen=10)  # TODO {{time: <user>},}
         self._usercount = 0
         self._nomore = False  # Indica si el chat tiene más mensajes
         super().__init__(mgr, name, getServer(name), account or ('', ''))
@@ -2173,7 +2214,19 @@ class Room(CHConnection):
     def alluserlist(self):
         """Lista de todos los usuarios en la sala (con anons)"""
         return sorted([x[1] for x in list(self._userdict.values())],
-                      key = lambda z: z.name.lower())
+                      key=lambda z: z.name.lower())
+
+    @property
+    def userdict(self):  # Try not to use it directly and do not modify it
+        return self._userdict
+
+    @property
+    def allusertimes(self):  # With anons and repeated
+        return [(y, float(x)) for x, y in self._userdict.values()]
+
+    @property
+    def usertimes(self):  # No anons and no repeated users
+        return list(dict([(x, y) for x, y in sorted(self.allusertimes, key=lambda x: x[1]) if not x.isanon]).items())
 
     ##########
     # Nombres de Usuarios
@@ -2301,7 +2354,7 @@ class Room(CHConnection):
     @property
     def modnames(self):
         """Nombres de los moderadores en la sala"""
-        return sorted([x.name for x in self.mods], key = lambda s: s.lower())
+        return sorted([x.name for x in self.mods], key=lambda s: s.lower())
 
     @property
     def msgs(self):
@@ -2350,7 +2403,7 @@ class Room(CHConnection):
     def userhistory(self):
         return self._userhistory
 
-    def getSessionlist(self, mode = 0, memory = 0):
+    def getSessionlist(self, mode=0, memory=0):
         """
         Regresa la lista de usuarios y su cantidad de sesiones en la sala
         @param mode: Modo 0 (User,int), 1 (name,int) 3 (showname,int)
@@ -2375,7 +2428,7 @@ class Room(CHConnection):
             rest.detach()
         self._history.append(msg)
 
-    def _getUserlist(self, unique = 1, memory = 0, anons = False):
+    def _getUserlist(self, unique=1, memory=0, anons=False):
         """
         Regresa una lista con los nombres de usuarios en la sala
         @param unique: bool indicando si la lista es única
@@ -2392,12 +2445,12 @@ class Room(CHConnection):
                                            min(-memory, len(self._history)):]))
         if unique:
             ul = set(ul)
-        return sorted(list(ul), key = lambda x: x.name.lower())
+        return sorted(list(ul), key=lambda x: x.name.lower())
 
     ####################
     # Comandos de la sala
     ####################
-    def addMod(self, user, powers = '82368'):
+    def addMod(self, user, powers='82368'):
         """
         Agrega un moderador nuevo a la sala con los poderes básicos
         @param user: str. Usuario que será mod
@@ -2408,8 +2461,7 @@ class Room(CHConnection):
         if isinstance(user, User):
             user = user.name
         if self.user == self.owner or (
-                self.user in self.mods and self.modflags.get(
-                self.user.name).EDIT_MODS):
+                self.user in self.mods and self.modflags.get(self.user.name).EDIT_MODS):
             self._sendCommand('addmod:{}:{}'.format(user, powers))
             return True
         return False
@@ -2482,7 +2534,7 @@ class Room(CHConnection):
             return True
         return False
 
-    def getLastMessage(self, user = None):
+    def getLastMessage(self, user=None):
         """Obtener el último mensaje de un usuario en una sala"""
         if not user:
             return self._history and self._history[-1] or None
@@ -2506,7 +2558,7 @@ class Room(CHConnection):
                 return 1
         return 0
 
-    def login(self, uname = None, password = None, account = None):
+    def login(self, uname=None, password=None, account=None):
         # TODO login aunque tenga otra cuenta conectada?
 
         if not account:
@@ -2517,7 +2569,7 @@ class Room(CHConnection):
                 account[1] = password
         if isinstance(account, str):
             cuenta = {k.lower(): [k, v] for k, v in self.mgr._accounts}.get(
-                    account.lower(), self.mgr._accounts[0])
+                account.lower(), self.mgr._accounts[0])
             cuenta[0] = account  # Poner el nombre tal cual
             account = cuenta
             self._currentaccount = [account[0], account[1]]
@@ -2528,7 +2580,7 @@ class Room(CHConnection):
         """Salir de la cuenta y permanecer en la sala como Anon"""
         self._sendCommand("blogout")
 
-    def message(self, msg, html: bool = False, canal = None, badge = 0):
+    def message(self, msg, html: bool = False, canal=None, badge=0):
         """TODO channel 5 para la combinacion esa y un badge
         TODO cola de mensajes
         Envía un mensaje
@@ -2566,7 +2618,7 @@ class Room(CHConnection):
             user = user.name
         self._sendCommand('removemod', user)
 
-    def setBannedWords(self, part = '', whole = ''):
+    def setBannedWords(self, part='', whole=''):
         """
         Actualiza las palabras baneadas para que coincidan con las recibidas
         @param part: Las partes de palabras que serán baneadas (separadas por
@@ -2586,7 +2638,7 @@ class Room(CHConnection):
         if self.connected:
             self._sendCommand('msgmedia', str(self._recording))
 
-    def setSilent(self, silent = True):
+    def setSilent(self, silent=True):
         """
         Silencia al bot en una sala
         @param silent: bool indica si activar o desactivar el silencio
@@ -2602,7 +2654,7 @@ class Room(CHConnection):
         else:
             return False
 
-    def updateBannedWords(self, part = '', whole = ''):
+    def updateBannedWords(self, part='', whole=''):
         """
         Actualiza las palabras baneadas agregando las indicadas,
         ambos parámetros son opcionales
@@ -2615,7 +2667,7 @@ class Room(CHConnection):
         self._bwqueue = '%s:%s' % (part, whole)
         self._sendCommand('getbannedwords')
 
-    def updateFlags(self, flag = None, enabled = True):
+    def updateFlags(self, flag=None, enabled=True):
         if flag:
             if self.flags and flag in dir(self.flags):
                 if flag in GroupFlags:
@@ -2628,19 +2680,19 @@ class Room(CHConnection):
                     return True
         return False
 
-    def updateInfo(self, title = '', info = ''):
+    def updateInfo(self, title='', info=''):
         title = title or self._info[0]
         info = info or self._info[1]
         data = {
-            "erase":  0, "l": 1, "d": info, "n": title, "u": self.name,
-            "lo":     self._currentaccount[0], "p": self._currentaccount[1],
+            "erase": 0, "l": 1, "d": info, "n": title, "u": self.name,
+            "lo": self._currentaccount[0], "p": self._currentaccount[1],
             "origin": "st.chatango.com",
-            }
+        }
         if WS.RPOST("http://chatango.com/updategroupprofile", data):
             return True
         return False
 
-    def updateMod(self, user: str, powers: str = '82368', enabled = None):
+    def updateMod(self, user: str, powers: str = '82368', enabled=None):
         """
         Actualiza los poderes de un moderador
         @param user: Moderador al que se le actualizarán los privilegios
@@ -2673,8 +2725,8 @@ class Room(CHConnection):
         self._sendCommand('updmod:{}:{}'.format(user, powers))
         return True
 
-    def updateBg(self, bgc = '', ialp = '100', useimg = '0', bgalp = '100',
-                 align = 'tl', isvid = '0', tile = '0', bgpic = None):
+    def updateBg(self, bgc='', ialp='100', useimg='0', bgalp='100',
+                 align='tl', isvid='0', tile='0', bgpic=None):
         """
         @param bgpic: Imagen de bg. si se envía se ignora lo demás.
         @param bgc: Color del bg Hexadecimal
@@ -2686,16 +2738,17 @@ class Room(CHConnection):
         @param tile: Si la imagen se repite para cubrir el area de texto(0/1)
         @return: bool indicando exito o fracaso
         """
+        # TODO get default values before
         data = {
-            "lo":    self._currentaccount[0], "p": self._currentaccount[1],
-            "bgc":   bgc, "ialp": ialp, "useimg": useimg, "bgalp": bgalp,
+            "lo": self._currentaccount[0], "p": self._currentaccount[1],
+            "bgc": bgc, "ialp": ialp, "useimg": useimg, "bgalp": bgalp,
             "align": align, "isvid": isvid, "tile": tile, 'hasrec': '0'
-            }
+        }
         headers = None
         if bgpic:
             data = {
                 "lo": self._currentaccount[0], "p": self._currentaccount[1]
-                }
+            }
             if bgpic.startswith("http:") or bgpic.startswith("https:"):
                 archivo = urlreq.urlopen(bgpic)
             else:
@@ -2703,21 +2756,21 @@ class Room(CHConnection):
             files = {
                 'Filedata': {
                     'filename': bgpic,
-                    'content':  archivo.read().decode('latin-1')
-                    }
+                    'content': archivo.read().decode('latin-1')
                 }
+            }
             data, headers = WS.encode_multipart(data, files)
             headers.update({
                 "host": "chatango.com", "origin": "http://st.chatango.com"
-                })
+            })
         if WS.RPOST("http://chatango.com/updatemsgbg", data, headers):
             self._sendCommand("miu")
             return True
         else:
             return False
 
-    def updateProfile(self, age = '', gender = '', country = '', about = '',
-                      fullpic = None, show = False, **kw):
+    def updateProfile(self, age='', gender='', country='', about='',
+                      fullpic=None, show=False, **kw):
         """
         Actualiza el perfil del usuario
         NOTA: Solo es posible actualizar imagen o información por separado
@@ -2735,10 +2788,10 @@ class Room(CHConnection):
         # TODO eliminar la variable **kw
         # TODO Evitar vaciar lo que no se manda
         data = {
-            'u':    self._currentaccount[0], 'p': self._currentaccount[1],
+            'u': self._currentaccount[0], 'p': self._currentaccount[1],
             'auth': 'pwd', 'arch': 'h5', 'src': 'group', 'action': 'update',
-            'age':  age, 'gender': gender, 'location': country, 'line': about
-            }
+            'age': age, 'gender': gender, 'location': country, 'line': about
+        }
         data.update(**kw)
         headers = {}
         if fullpic:
@@ -2750,31 +2803,31 @@ class Room(CHConnection):
             files = {
                 'Filedata': {
                     'filename': fullpic,
-                    'content':  archivo.read().decode('latin-1')
-                    }
+                    'content': archivo.read().decode('latin-1')
                 }
+            }
             data, headers = WS.encode_multipart(data, files)
             headers.update({
                 "host": "chatango.com", "origin": "http://st.chatango.com"
-                })
+            })
         if WS.RPOST("http://chatango.com/updateprofile", data,
-                    headers = headers):
+                    headers=headers):
             return True  # TODO comprobar resultado
         else:
             return False
 
-    def uploadImage(self, img, url = False, **kw):
+    def uploadImage(self, img, url=False, **kw):
         """
         TODO sacar la parte del archivo
         Sube una imagen al servidor y regresa el número
         @param img: url de una imagen (local o web). También puede ser un
-        archivo de bytes con la propiedad read()
+        archivo de bytes con el métdo read()
         @param url: Indica si retornar una url o solo el número. Defecto(False)
         @return: string con url o número de la imagen
         """
         data = {
             'u': self._currentaccount[0], 'p': self._currentaccount[1]
-            }
+        }
         if type(img) == str and (
                 img.startswith("http:") or img.startswith("https:")):
             archivo = urlreq.urlopen(img).read()
@@ -2784,14 +2837,14 @@ class Room(CHConnection):
             archivo = img.read()
         files = {
             'filedata': {'filename': img, 'content': archivo.decode('latin-1')}
-            }
+        }
         files['filedata'].update(**kw)
         if hasattr(archivo, 'close'):
             archivo.close()
         data, headers = WS.encode_multipart(data, files)
         headers.update(
-                {"host": "chatango.com", "origin": "http://st.chatango.com"})
-        res = WS.RPOST("http://chatango.com/uploadimg", data, headers = headers)
+            {"host": "chatango.com", "origin": "http://st.chatango.com"})
+        res = WS.RPOST("http://chatango.com/uploadimg", data, headers=headers)
         if res:
             res = res.read().decode('utf-8')
             if 'success' in res:
@@ -2816,7 +2869,7 @@ class Room(CHConnection):
             return self._banlist[User(user)]
         return None
 
-    def _login(self, uname = None, password = None):
+    def _login(self, uname=None, password=None):
         """
         Autenticar. Logearse como uname con password. En caso de no haber
         ninguno usa la _currentaccount
@@ -2877,8 +2930,8 @@ class Room(CHConnection):
                           str(int(time.time() + self._correctiontime)), 'next',
                           '500', 'anons', '1')
 
-    def setAnnouncement(self, anuncio = None, tiempo = 0,
-                        enabled = True):  # TODO activar o desactivar solamente
+    def setAnnouncement(self, anuncio=None, tiempo=0,
+                        enabled=True):  # TODO activar o desactivar solamente
         """Actualiza el anuncio por el indicado
         @param anuncio: El anuncio nuevo
         @param tiempo: Cada cuanto enviar el anuncio, en segundos (minimo 60)
@@ -2893,7 +2946,7 @@ class Room(CHConnection):
         # TODO usar fuentes por defecto del usuario
         if self.owner != self.user and (
                 self.user not in self.mods or not self.modflags.get(
-                self.user.name).EDIT_GP_ANNC):
+            self.user.name).EDIT_GP_ANNC):
             return False
         if anuncio is None:
             self._announcement[0] = int(enabled)
@@ -3053,9 +3106,7 @@ class Room(CHConnection):
                     name = '#' + tname
                 else:
                     name = '!' + getAnonName(puid, contime)
-            user = User(name, room = self, isanon = isanon, puid = puid)
-            if user in ({self._owner} | self.mods):
-                user.setName(name)
+            user = User(name, room=self, isanon=isanon, puid=puid)
             user.addSessionId(self, ssid)
             self._userdict[ssid] = [contime, user]
 
@@ -3086,17 +3137,16 @@ class Room(CHConnection):
             self._history.appendleft(msg)
             self._callEvent("onHistoryMessage", msg.user, msg)
 
-    def _rcmd_inited(self, args = None):
+    def _rcmd_inited(self, args=None):
         """
         El historial y los comandos inicales se han recibido.
         """
         self._reload()
         if self.attempts <= 1:
-            self._connectattempts = 1
             self._callEvent("onConnect")
         else:
             self._callEvent("onReconnect")
-            self._connectattempts = 1
+        self._connectattempts = 1
         # TODO, rellenar history hasta el límite indicado
         # self._sendCommand("get_more:20:" + str(self._waitingmore -  1))
 
@@ -3109,8 +3159,8 @@ class Room(CHConnection):
         name = '!' + getAnonName(self._puid,
                                  str(self._connectiontime))
         self._user = User(name,
-                          nameColor = str(self._connectiontime).split('.')[0][
-                                      -4:])
+                          nameColor=str(self._connectiontime).split('.')[0][
+                                    -4:])
         self._callEvent('onLogout', self._user, '?')  # TODO fail aqui
 
     def _rcmd_mods(self, args):
@@ -3138,7 +3188,7 @@ class Room(CHConnection):
             privs = set(x for x in dir(mods.get(user)) if
                         not x.startswith('_') and getattr(mods.get(user),
                                                           x) != getattr(
-                                pre.get(user), x))
+                            pre.get(user), x))
             privs = privs - {'MOD_ICON_VISIBLE', 'value'}  # Let's Ignore these
             if privs:  # ¿Are there changes?
                 self._callEvent('onModChange', user, privs)
@@ -3147,7 +3197,7 @@ class Room(CHConnection):
         """Recarga la imagen y/o bg del usuario en cuestión"""
         self._callEvent('onBgChange', User(args[0]))
 
-    def _rcmd_mustlogin(self, args = None):
+    def _rcmd_mustlogin(self, args=None):
         """Debes logearte para participar"""
         self._callEvent('onLoginRequest')
 
@@ -3195,7 +3245,7 @@ class Room(CHConnection):
                 self._mods[User(x.split(',')[0])] = self._parseFlags(powers,
                                                                      ModFlags)
                 self._mods[User(x.split(',')[0])].isadmin = int(
-                        powers) & AdminFlags != 0
+                    powers) & AdminFlags != 0
 
     def _rcmd_participant(self, args):
         """
@@ -3215,7 +3265,7 @@ class Room(CHConnection):
                 name = '#' + tname
             else:
                 name = '!' + getAnonName(puid, contime)
-        user = User(name, puid = puid)
+        user = User(name, puid=puid)
         before = None
         if ssid in self._userdict:
             before = self._userdict[ssid][1]
@@ -3229,7 +3279,7 @@ class Room(CHConnection):
                     self._userhistory.append([contime, usr])
                 else:
                     self._userhistory.remove(
-                            [x for x in self._userhistory if x[1] == usr][0])
+                        [x for x in self._userhistory if x[1] == usr][0])
                     self._userhistory.append([contime, usr])
             if user.isanon:
                 self._callEvent('onAnonLeave', user, puid)
@@ -3246,7 +3296,7 @@ class Room(CHConnection):
             lista = [x[1] for x in self._userhistory]
             if user in lista:
                 self._userhistory.remove(
-                        [x for x in self._userhistory if x[1] == user][0])
+                    [x for x in self._userhistory if x[1] == user][0])
         else:  # 2 Account Change
             # Quitar la cuenta anterior de la lista y agregar la nueva
             # TODO conectar cuentas que han cambiado usando este método
@@ -3270,7 +3320,7 @@ class Room(CHConnection):
             user.addPersonalUserId(self, puid)
             self._userdict[ssid] = [contime, user]
 
-    def _rcmd_pwdok(self, args = None):
+    def _rcmd_pwdok(self, args=None):
         """Login correcto"""
         self._user = User(self._currentname)
         self._callEvent("onLogin", self._user)
@@ -3284,10 +3334,10 @@ class Room(CHConnection):
         """Temporary ban sigue activo con el tiempo indicado"""
         self._callEvent("onFloodBanRepeat", int(args[0]))
 
-    def _rcmd_u(self, args):  # TODO
+    def _rcmd_u(self, args):
         if args[0] in self._mqueue:
             msg = self._mqueue.pop(args[0])
-            if msg._user != self.user:
+            if msg.user != self.user:
                 msg.user._fontColor = msg.fontColor
                 msg.user._fontFace = msg.fontFace
                 msg.user._fontSize = msg.fontSize
@@ -3320,7 +3370,7 @@ class Room(CHConnection):
         ubsrc = User(args[-2])
         time = args[-1]
         self._unbanqueue.append(
-                self._BANDATA(unid, ip, target, float(time), ubsrc))
+            self._BANDATA(unid, ip, target, float(time), ubsrc))
 
         if target == '':
             # Si el baneado era anon, intentar otbener su nombre
@@ -3372,7 +3422,7 @@ class Gestor:
     Clase Base para manejar las demás conexiones
     """
     _TimerResolution = 0.2
-    maxHistoryLength = 700
+    maxHistoryLength = 500
     PMHost = "c1.chatango.com"
 
     def __dir__(self):
@@ -3384,7 +3434,7 @@ class Gestor:
         return "<%s>" % self.__class__.__name__
 
     def __init__(self, name: str = '', password: str = None, pm: bool = None,
-                 accounts = None):
+                 accounts=None):
         self._accounts = accounts
         self._colasalas = queue.Queue()
         self.connlock = threading.Lock()
@@ -3440,33 +3490,29 @@ class Gestor:
         return list(self._rooms.keys())
 
     @classmethod
-    def easy_start(cls, rooms: list = None, name: str = None,
-                   password: str = None, pm: bool = True,
+    def easy_start(cls, rooms: list = None, name: str = '',
+                   password: str = '', pm: bool = True,
                    accounts: [(str, str), (str, str), ...] = None):
         """
         Inicio rápido del bot y puesta en marcha
-        @param rooms: Una lista de sslas
+        @param rooms: Una lista de salas
         @param name: Nombre de usuario
         @param password: Clave de conexión
         @param pm: Si se usará el PM o no
         @param accounts: Una lista/tupla de cuentas ((clave,usuario))
         """
         if not rooms:
-            rooms = str(input('Nombres de salas separados por coma: ')).split(
-                    ',')
+            rooms = str(input('Nombres de salas separados por coma: ')).split(',')
         if '' in rooms:
             rooms = []
         if not name and not accounts:
             name = str(input("Usuario: "))
-        if not name:
-            name = ''
         if not password and not accounts:
             password = str(input("Contraseña: "))
-        if not password:
-            password = ''
         if not accounts:
             accounts = [(name, password)]
         self = cls(name, password, pm, accounts)
+
         for room in rooms:
             self.joinRoom(room)
 
@@ -3474,6 +3520,10 @@ class Gestor:
 
     def onInit(self):
         """Invocado antes de empezar los demás procesos en main"""
+        pass
+
+    def onStop(self):
+        """Invocado para avisar cierre del bot"""
         pass
 
     def findUser(self, name):
@@ -3503,7 +3553,7 @@ class Gestor:
         """
         return self._rooms.get(room.lower())
 
-    def joinRoom(self, room: str, account = None):
+    def joinRoom(self, room: str, account=None):
         """
         Unirse a una sala con la cuenta indicada
         @param room: Sala a la que unirse
@@ -3513,7 +3563,7 @@ class Gestor:
             account = self._accounts[0]
         if isinstance(account, str):
             cuenta = {k.lower(): [k, v] for k, v in self._accounts}.get(
-                    account.lower(), self._accounts[0])
+                account.lower(), self._accounts[0])
             cuenta[0] = account
             account = cuenta
         if room.lower() not in self._rooms:
@@ -3547,35 +3597,40 @@ class Gestor:
         """
         Poner en marcha al bot
         """
-        while self._pm == True:
-            try:
-                self._pm = PM(mgr=self, name=self.name,
-                              password=self.password)
-            except socket.gaierror as malInicio:  # En caso de que no haya internet
-                print("[{0}] No hay internet, Reintentando conexión en 10... ".format(
-                    time.strftime('%I:%M:%S %p')
-                ))
-                time.sleep(10)
+        try:
+            while self._pm == True:
+                try:
+                    self._pm = PM(mgr=self, name=self.name,
+                                  password=self.password)
+                except socket.gaierror as malInicio:  # En caso de que no haya internet
+                    print("[{0}] No hay internet, Reintentando conexión en 10... ".format(
+                        time.strftime('%I:%M:%S %p')
+                    ))
+                    time.sleep(10)
 
-        self.onInit()
-        if self._running == False:
-            return
-        self._running = True
-        self._jt = threading.Thread(target = self._joinThread,
-                                    name = "Join rooms")
-        self._jt.daemon = True
-        self._jt.start()
-        while self._running:
-            time.sleep(0.01)
+            self.onInit()
+            if self._running == False:
+                return
+            self._running = True
+            self._jt = threading.Thread(target=self._joinThread, name="Join rooms")
+            self._jt.daemon = True
+            self._jt.start()
+            while self._running:
+                # TODO opcional para multiples Networks
+                time.sleep(0.01)
+                pass
+
+            # Finish
+            # Cerrar conexiones
+            for conn in self.getConnections():
+                conn.disconnect()
+            # Cancelar tareas
+            for x in list(self._tasks):
+                x.cancel()
+        except KeyboardInterrupt:
             pass
-
-        # Finish
-        # Cerrar conexiones
-        for conn in self.getConnections():
-            conn.disconnect()
-        # Cancelar tareas
-        for x in list(self._tasks):
-            x.cancel()
+        finally:
+            self.onStop()
 
     def removeTask(self, task):
         """Eliminar una tarea"""
@@ -3585,8 +3640,9 @@ class Gestor:
     def stop(self):
         """Detiene al bot"""
         self._running = False
+        self.onStop()
 
-    def enableBg(self, activo = True):
+    def enableBg(self, activo=True):
         """Enable background if available."""
         self.bgmode = activo
         for room in self.rooms:
@@ -3594,7 +3650,7 @@ class Gestor:
         if self.pm:
             self.pm.setBgMode(int(activo))
 
-    def enableRecording(self, activo = True):
+    def enableRecording(self, activo=True):
         """Enable recording if available."""
         self.user._mrec = True
         for room in self.rooms:
@@ -4123,10 +4179,10 @@ class Gestor:
         @type error: Exception
         """
         print(
-                "[{}][{}]: Conexión perdida, reintentando...[{}] ".format(
-                        room,
-                        time.strftime(
-                                '%I:%M:%S %p'), error), file = sys.stderr)
+            "[{}][{}]: Conexión perdida, reintentando...[{}] ".format(
+                room,
+                time.strftime(
+                    '%I:%M:%S %p'), error), file=sys.stderr)
 
     def onConnectionAttempt(self, room, error):
         """
@@ -4136,19 +4192,19 @@ class Gestor:
         @type error: Exception
         """
         print('[{}][{}][{:^5}] Aún no hay internet.[{}]'.format(
-                time.strftime(
-                        '%I:%M:%S %p'),
-                room,
-                room._connectattempts, error),
-                file = sys.stderr)
+            time.strftime('%I:%M:%S %p'),
+            room,
+            room._connectattempts, error),
+            file=sys.stderr)
 
     def onPremiumChange(self, room, user):
         """
         Al detectar un cambio en el estado premium de un usuario
-        @param room: Sala o  pm donde ocurre 
+        @param room: Sala o  pm donde ocurre
         @param user: Usuario que ha recibido o perdido estado premium
         """
         pass
+
 
 class RoomManager(Gestor):
     """

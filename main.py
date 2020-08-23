@@ -28,8 +28,6 @@ def main_file():
 
         # Start bot.
         example_bot_v.main()
-    except KeyboardInterrupt:
-        config.Tools.stop_bot(example_bot_v)
     except (Exception, BaseException):
         print("Error: {}".format(str(config.Tools.error_def())))
 

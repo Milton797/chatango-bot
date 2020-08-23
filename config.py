@@ -37,7 +37,7 @@ elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
 # Inicio #
 ##########
 
-class Bot:
+class Bot(object):
     accounts = [
         ("Acc1", "pass1"),
         ("Acc2", "pass2")
@@ -52,7 +52,7 @@ class Bot:
     hour_format = "%I:%M:%S:%p|%d/%m/%Y"
 
 
-class StylesBot:
+class StylesBot(object):
     font_styles = {"name_color": "000000", "font_color": "000000", "font_face": 1, "font_size": 12}
     titles_style = "<f x{}{}='{}'>".format(
         font_styles["font_size"],
@@ -66,12 +66,12 @@ class StylesBot:
     )
 
 
-class GlobalsV:
+class GlobalsV(object):
     evalp = "milton797 milton megamaster12 linkkg".split()
     anons = "! #".split()
 
 
-class Paths:
+class Paths(object):
     u_bot = "{0}".format(os.path.dirname(os.path.abspath(sys.argv[0])))
 
     u_documents = "{0}{2}{1}{2}".format(u_bot, "Documents", os.sep)
@@ -83,7 +83,7 @@ class Paths:
     u_langs_file = "{}{}".format(u_documents, "langs.json")
 
 
-class StylePrint:
+class StylePrint(object):
     @staticmethod
     def safe_print_bot(self, place, user, message, status):
         try:
@@ -175,8 +175,8 @@ class StylePrint:
             return "Error: {}".format(str(Tools.error_def()))
 
 
-class Database:
-    class Molds:
+class Database(object):
+    class Molds(object):
 
         Default_Wl = {
             "lang": "en",
@@ -555,7 +555,7 @@ class Database:
             return "Error: {}".format(Tools.error_def())
 
 
-class Tools:
+class Tools(object):
 
     @staticmethod
     def error_def():
@@ -817,7 +817,7 @@ class Tools:
         bot_self.setTimeout(2, bot_self.stop)
 
 
-class Files:
+class Files(object):
 
     @staticmethod
     def delete_file(u):
@@ -898,7 +898,7 @@ class Files:
             return "Error: {}".format(str(Tools.error_def()))
 
 
-class Simi:
+class Simi(object):
     loaded_info = list()
 
     @staticmethod

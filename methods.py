@@ -16,7 +16,7 @@ import config
 # Start #
 #########
 
-class OnlineDefs:
+class OnlineDefs(object):
     apis = {"google_apis": "PUT_YOUR_API_KEY_HERE",
             "cx": "PUT_YOUR_CX_KEY_HERE"}
 

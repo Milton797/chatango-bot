@@ -24,11 +24,15 @@ if megach.debug is True:
 class ExampleBot(megach.RoomManager):
 
     def onInit(self):
-        # Auto Start
+        # Auto Start.
         config.Tools.auto_start(self)
 
         # Automatic tasks
         self.setInterval(900, config.Tools.auto_tasks)
+
+    def onStop(self):
+        # Close bot.
+        config.Tools.stop_bot(self)
 
     def onMessage(self, room, user, message):
         # Print message.
