@@ -11,7 +11,6 @@ import os
 import random
 import string
 import sys
-import threading
 import time
 import types
 import urllib.request as urlreq
@@ -180,7 +179,7 @@ class Database(object):
 
         Default_Wl = {
             "lang": "en",
-            "lvl": 1,
+            "lvl":  1,
             "nick": ""
         }
 
@@ -674,21 +673,11 @@ class Tools(object):
 
             # Get answer from answer_cmds or auto_answers.
             if prefix is True:
-                threading.Thread(
-                    target=cmds.answer_cmds,
-                    name="Process_room_cmds",
-                    kwargs=locals(),
-                    daemon=True
-                ).start()
+                cmds.answer_cmds(**locals())
             else:
                 cmd_args = message.body.lower()
                 if cmd_args:
-                    threading.Thread(
-                        target=answers.auto_answers,
-                        name="Process_room_answers",
-                        kwargs=locals(),
-                        daemon=True
-                    ).start()
+                    answers.auto_answers(**locals())
         except (Exception, BaseException):
             return "Error: {}".format(str(Tools.error_def()))
 
