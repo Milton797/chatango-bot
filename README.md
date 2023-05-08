@@ -1,7 +1,29 @@
 # Chatango Bot By Milton797
-_**Based on RoryMercury797.**_ - _**ONLY WORKS IN PYTHON 3**_ - _**Using Megach.py**_
 
-## Bot Supports:
+_**Based on RoryMercury797 - ONLY WORKS IN PYTHON 3 - Using Megach.py**_
+
+> **Warning**
+>
+> - Last test on Python 3.11.3
+
+## Table of Contents
+
+- [Chatango Bot By Milton797](#chatango-bot-by-milton797)
+  - [Table of Contents](#table-of-contents)
+  - [Bot Supports](#bot-supports)
+  - [Instructions](#instructions)
+    - [Download Python 3](#download-python-3)
+    - [Install python windows](#install-python-windows)
+    - [Install python linux](#install-python-linux)
+  - [Run example bot](#run-example-bot)
+    - [Manual](#manual)
+    - [Run on windows](#run-on-windows)
+    - [Run on linux](#run-on-linux)
+  - [Special Thanks To](#special-thanks-to)
+  - [Contact With Me](#contact-with-me)
+
+## Bot Supports
+
 - All supports from megach.
 - Multi language [Rooms, PM, Bot]
 - Easy reload modules.
@@ -10,19 +32,65 @@ _**Based on RoryMercury797.**_ - _**ONLY WORKS IN PYTHON 3**_ - _**Using Megach.
 - Auto save data.
 - Anons support.
 
-## Instructions:
-- Download Python 3 of [Python](https://www.python.org/downloads/).
-	- Install python:
-		- Install python in your path checking "Add Python to PATH " If you install it in **Windows**
-		- **Linux** have python3 and python2 for default in last versions.
-	- For run bot:
-		- Doble clic in "main.py" if you run **Windows** _**Or**_ "python3 main.py" in your path if you run **Linux**.
-		- _**RECOMMENDED OPTION TO RUN IT´S**_ Double clic in "run_example_windows.bat" if you run **Windows** _**Or**_ Open one terminal in your bot local path and type "chmod 777 run_example_linux.sh" and type "run_example_linux.sh" if you run **Linux**.
+## Instructions
 
-## Special Thanks To:
+### Download Python 3
+
+[Python](https://www.python.org/downloads/ "Python")
+
+### Install python windows
+
+Install python in your path checking "Add Python to PATH "
+
+### Install python linux
+
+Usually linux have python3 and python2 for default in last versions.
+
+## Run example bot
+
+### Manual
+
+```bash
+python .\main.py
+```
+
+### Run on windows
+
+> **Note**
+>
+> - You can run it with double click
+
+```bash
+.\run_example_windows.bat
+```
+
+### Run on linux
+
+> **Note**
+>
+> - Use chmod just the first time
+
+```bash
+chmod 777 run_example_linux.sh
+```
+
+```bash
+./run_example_linux.sh
+```
+
+## Special Thanks To
+
 - MegaMaster12 - [Megach.py](https://github.com/LinkkG/megach).
 - Python - Language Used.
 
-## Contact With Me:
-If you have one problem you can post in [PythonRPG](http://pythonrpg.chatango.com/) or [RoryMercuryApostol](http://rorymercuryapostol.chatango.com/)
-Add Error line and description of your error please.
+## Contact With Me
+
+> **Note**
+>
+> - Add Error line and description of your error please.
+> - If the error is caused by your code, I do not promise to help you.
+
+If you have one problem you can post in:
+
+- [ExampleBots](https://example-bots.chatango.com/ "ExampleBots")
+- [RoryMercuryApostol](https://rorymercuryapostol.chatango.com/ "RoryMercuryApostol")

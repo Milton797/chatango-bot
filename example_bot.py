@@ -34,16 +34,25 @@ class ExampleBot(megach.RoomManager):
         # Close bot.
         config.Tools.stop_bot(self)
 
-    def onMessage(self, room, user, message):
+    def on_message(self, context):
         # Print message.
-        config.StylePrint.safe_print_bot(self, room, user, message, "")
+        config.StylePrint.safe_print_bot(
+            self, context.room,
+            context.user, context.message, ""
+        )
 
         # Do cmd or auto answer.
-        config.Tools.answer_pm_rooms(self, room, user, message)
+        config.Tools.answer_pm_rooms(
+            self, context.room,
+            context.user, context.message
+        )
 
     def onPMMessage(self, pm, user, message):
         # Print message.
-        status = config.Database.take_lang_bot(config.Bot.bot_lang, "on_pm_message_online")
+        status = config.Database.take_lang_bot(
+            config.Bot.bot_lang,
+            "on_pm_message_online"
+        )
         config.StylePrint.safe_print_bot(self, pm, user, message, status)
 
         # Do cmd or auto answer.
@@ -51,12 +60,18 @@ class ExampleBot(megach.RoomManager):
 
     def onPMOfflineMessage(self, pm, user, message):
         # Print message.
-        status = config.Database.take_lang_bot(config.Bot.bot_lang, "on_pm_message_offline")
+        status = config.Database.take_lang_bot(
+            config.Bot.bot_lang,
+            "on_pm_message_offline"
+        )
         config.StylePrint.safe_print_bot(self, pm, user, message, status)
 
     def onPMMessageSend(self, pm, user, message):
         # Print message.
-        status = config.Database.take_lang_bot(config.Bot.bot_lang, "on_pm_message_send")
+        status = config.Database.take_lang_bot(
+            config.Bot.bot_lang,
+            "on_pm_message_send"
+        )
         config.StylePrint.safe_print_bot(self, pm, user, message, status)
 
 #######

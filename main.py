@@ -8,13 +8,16 @@
 import config
 import example_bot
 
-
 #################################
 # Start the bot to pv and rooms #
 #################################
 
+
 def main_file():
-    example_bot_v = example_bot.ExampleBot(accounts=config.Bot.accounts, pm=config.Bot.pm_connect)
+    example_bot_v = example_bot.ExampleBot(
+        accounts=config.Bot.accounts,
+        pm=config.Bot.pm_connect
+    )
     try:
         text_i = config.Database.take_lang_bot(config.Bot.bot_lang, "start")
         text_f = text_i.format(config.Files.delete_pycache())
@@ -24,7 +27,11 @@ def main_file():
         config.Database.load_all()
 
         # Start rooms.
-        config.Tools.start_connections(example_bot_v, ignore_room=["for_pm"], anon_room=[])
+        config.Tools.start_connections(
+            example_bot_v,
+            ignore_room=["for_pm"],
+            anon_room=[]
+        )
 
         # Start bot.
         example_bot_v.main()

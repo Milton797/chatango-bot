@@ -11,10 +11,10 @@ import urllib.request as urlreq
 
 import config
 
-
 #########
 # Start #
 #########
+
 
 class OnlineDefs(object):
     apis = {"google_apis": "PUT_YOUR_API_KEY_HERE",
@@ -69,9 +69,12 @@ class OnlineDefs(object):
                 total_imgs = []
                 if int(data["queries"]["request"][0]["totalResults"]) != 0:
                     page_info = data["items"]
-                    save_total_f = save_total if len(page_info) >= save_total else len(page_info)
-                    imgs = [page_info[x]["link"] for x in range(0, save_total_f)]
-                    [(total_imgs.append("<b>%s)</b> %s" % (x, c))) for x, c in enumerate(imgs, start=1)]
+                    save_total_f = save_total if len(
+                        page_info) >= save_total else len(page_info)
+                    imgs = [page_info[x]["link"]
+                            for x in range(0, save_total_f)]
+                    [(total_imgs.append("<b>%s)</b> %s" % (x, c)))
+                     for x, c in enumerate(imgs, start=1)]
                     text = lang[0].format(" ".join(total_imgs))
                     return text
                 else:

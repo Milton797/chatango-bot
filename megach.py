@@ -15,6 +15,7 @@ import builtins
 import hashlib
 import html as html2
 import json
+import logging
 import mimetypes
 import os
 import queue
@@ -41,12 +42,13 @@ if sys.version_info[1] < 5:
 ################################################################
 # Depuration
 ################################################################
-version = 'M.1.7.6'
+version = 'M.1.7.8'
 version_info = version.split('.')
 debug = True
 autoupdate = True  # for special servers and tsweights
 path = ''  # get and save megach file path
 updated = 1556469390  # 2019-04-28 10:36 AM
+logging.basicConfig(level=logging.WARNING)
 ################################################################
 # Server variables
 ################################################################
@@ -79,23 +81,23 @@ tsweights = [['5', w12], ['6', w12], ['7', w12], ['8', w12], ['16', w12],
              ["77", sv12], ["78", sv12], ["79", sv12], ["80", sv12],
              ["81", sv12], ["82", sv12], ["83", sv12], ["84", sv12]]
 
+def deprecated(new_one='', old_one=''):
+    def decorator(function):
+        def wrapper(*args, **kwargs):
+            viejo = old_one or function.__name__
+            nuevo = new_one or function.__name__
+            logging.warning(f'Deprecated function: "{viejo}". Please change to "{nuevo}" instead')
+            return function(*args, **kwargs)
+        return wrapper
+    return decorator
 
-def _checkonline(web="http://chatango.com"):
-    # TODO unir con RPOSt y borrar este def
-    host = web.split("/")[-1]
-    request = urlreq.Request(web, method='HEAD', headers={
-        "Host":       host,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:79.0) Gecko/20100101 Firefox/79.0"
-    })
-    c = False
+def _check_online(web="http://chatango.com"):
+    """ Comprueba si una web está online y regresa un bool """
     try:
-        c = urlreq.urlopen(request)
-        if c.status == 200:
-            return c
+        r = WS.request(web, method = 'HEAD')
+        return r.status == 200
     except Exception as e:
-        pass
-    return c
-
+        return False
 
 def updatePath():
     """Get this module's directory and appends to path"""
@@ -369,7 +371,7 @@ def _strip_html(msg: str) -> str:
         return "".join(ret)
 
 
-def _parseFont(f: str, pm=False) -> (str, str, str):
+def _parse_font(f: str, pm=False) -> (str, str, str):
     """
     Lee el contendido de un etiqueta f y regresa
     tamaño color y fuente (en ese orden)
@@ -386,13 +388,13 @@ def _parseFont(f: str, pm=False) -> (str, str, str):
     return match.groups()
 
 
-def _parseNameColor(n: str) -> str:
+def _parse_name_color(n: str) -> str:
     """Return the name color from message"""
     # probably is already the name
     return _clean_message(n)[1]
 
 
-def _fontFormat(text):
+def _font_format(text):
     # TODO check
     """Converts */_ into whattsap like formats"""
     formats = {'/': 'I', '\*': 'B', '_': 'U'}
@@ -408,7 +410,7 @@ def _fontFormat(text):
 
 
 # TODO check
-def _videoImagePMFormat(text):
+def _convert_media_to_pm(text):
     """Returns text with formatted video and image for PM sending"""
     for x in re.findall('(http[s]?://[^\s]+outube.com/watch\?v=([^\s]+))', text):
         original = x[0]
@@ -436,6 +438,9 @@ class Struct:
 
     def __repr__(self):  # TODO algo util aca
         return '<Struct>'
+
+    def __add__(self, other):
+        return self._name + str(other)
 
 
 class Task:
@@ -751,33 +756,31 @@ class WS:
         return bytes(x ^ mask[i % 4] for i, x in enumerate(buffer[4:]))
 
     @staticmethod
-    def RPOST(url, data=None, headers=None):
+    def request(url, data=None, headers=None, method='GET'):
         """
-        Enviar una petición post
-        @param url: La url de la consulta
-        @param data: Los datos enviados a la url
-        @param headers: Las cabeceras de la petición post
-        @return:
+        Esto existe en import requests,
+        pero quería hacer esta librería lo más independiente posible
         """
-        # TODO check
         if type(data) is dict:
             data = urlparse.urlencode(data).encode('latin-1')
         elif type(data) is str:
             data = data.encode('latin-1')
         if not headers:
             headers = {
-                "host": "chatango.com", "origin": "http://st.chatango.com"
+                'Host': 'chatango.com',
+                'origin': 'http://st.chatango.com',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:79.0) Gecko/20100101 Firefox/79.0'
             }
-        pet = urlreq.Request(url, data=data, headers=headers)
+        pet = urlreq.Request(url, data = data, headers = headers, method = method)
         try:
             resp = urlreq.urlopen(pet)
             return resp
         except HTTPError as e:
-            raise  # e.code
+            raise
         except URLError as e:
-            raise  # e.reason
+            raise
         except Exception as e:
-            raise  # TODO no controlada
+            raise # TODO no controlada
 
 
 class User:
@@ -1272,7 +1275,7 @@ class Message:
             user._info = None
         if ip and ip != user.ip:
             user._ip = ip
-        fontSize, fontColor, fontFace = _parseFont(f.strip())
+        fontSize, fontColor, fontFace = _parse_font(f.strip())
         self = cls(badge=badge,
                    body=body,
                    channel=channel,
@@ -1311,7 +1314,7 @@ class WSConnection:
         self._firstCommand = True  # Si es el primer comando enviado
         self._headers = b''  # Las cabeceras que se enviaron en la petición
         self._origin = origin or server
-        self._port = port or 443  # El puerto de la conexión
+        self._port = port or 8080  # El puerto de la conexión
         self._server = server
         self._name = name
         self._serverheaders = b''  # Las caberceras de respuesta recibidas
@@ -1334,7 +1337,10 @@ class WSConnection:
 
     def _callEvent(self, evt, *args, **kw):
         try:
-            if self.mgr and hasattr(self.mgr, evt):
+            if evt=="on_message":
+                getattr(self.mgr, evt)(*args,**kw)
+                self.mgr.onEventCalled(self, evt,*args,**kw)
+            elif self.mgr and hasattr(self.mgr, evt):
                 getattr(self.mgr, evt)(self, *args, **kw)
                 self.mgr.onEventCalled(self, evt, *args, **kw)
             elif self.mgr:
@@ -1440,7 +1446,7 @@ class WSConnection:
                 attempts = 1  # connection attempts
                 self._connectattempts = 0
                 with WSConnection._WSLOCK:
-                    while not _checkonline():
+                    while not _check_online():
                         # No internet or chatango fails here
                         self._connectattempts += 1
                         self._callEvent('onConnectionAttempt', 'NO INTERNET or CHATANGO DOWN')
@@ -1641,7 +1647,7 @@ class CHConnection(WSConnection):
 
     def __init__(self, mgr, name, server, account):
         # Ports 8080 and 8081 ar http, 443 is https
-        super().__init__(server, 8080, 'http://st.chatango.com', name)
+        super().__init__(server, 8080, 'https://st.chatango.com', name)
         self._bgmode = 0
         self._currentaccount = account
         self._currentname = account and account[
@@ -1717,16 +1723,12 @@ class CHConnection(WSConnection):
                 # partir el mensaje en pedacitos y formatearlos por separado
                 espacios = msg.count(' ') + msg.count('\t')
                 particion = self.MAXLEN
-                conteo = 0
                 while espacios * 6 + particion > self.MAXLEN:
                     particion = len(
                         msg[:particion - espacios])  # Recorrido máximo 5
                     espacios = msg[:particion].count(' ') + msg[
                                                             :particion].count(
                         '\t')
-                    conteo += 1
-                if debug:  # TODO eliminar
-                    print(conteo)
                 return self._messageFormat(msg[:particion],
                                            html) + self._messageFormat(
                     msg[particion:], html)
@@ -1744,9 +1746,9 @@ class CHConnection(WSConnection):
                 round(int(fc[i:i + 2], 16) / 17) for i in
                 (0, 2, 4))).lower() if len(fc) == 6 else fc[:3].lower()
             msg = msg.replace('&nbsp;', ' ')  # fix
-            msg = _videoImagePMFormat(msg)
+            msg = _convert_media_to_pm(msg)
             if not html:
-                msg = _fontFormat(msg)
+                msg = _font_format(msg)
             msg = convertPM(msg)  # TODO No ha sido completamente probado
         else:  # Room
             if not html:
@@ -1759,7 +1761,7 @@ class CHConnection(WSConnection):
                 msg = msg.replace('  ', ' &#8203; ')
             formt = '<n{}/><f x{:0>2.2}{}="{}">{}'
             if not html:
-                msg = _fontFormat(msg)
+                msg = _font_format(msg)
             if self.user.isanon:
                 # El color del nombre es el tiempo de conexión y no hay fuente
                 nc = str(self._connectiontime).split('.')[0][-4:]
@@ -1856,7 +1858,7 @@ class PM(CHConnection):
             "user_id":     name, "password": password, "storecookie": "on",
             "checkerrors": "yes"
         }
-        resp = WS.RPOST("http://chatango.com/login", data)
+        resp = WS.request("http://chatango.com/login", data, method = 'POST')
         if not resp:
             return None
         for header, value in resp.headers.items():
@@ -2019,7 +2021,7 @@ class PM(CHConnection):
         rawmsg = ':'.join(args[5:])  # Mensaje
         body, n, f = _clean_message(rawmsg, pm=True)
         nameColor = n or None
-        fontSize, fontColor, fontFace = _parseFont(f)
+        fontSize, fontColor, fontFace = _parse_font(f)
         msg = Message(
             body=body,
             fontColor=fontColor,
@@ -2050,7 +2052,7 @@ class PM(CHConnection):
         rawmsg = ':'.join(args[5:])  # Mensaje
         body, n, f = _clean_message(rawmsg, pm=True)
         nameColor = n or None
-        fontSize, fontColor, fontFace = _parseFont(f)
+        fontSize, fontColor, fontFace = _parse_font(f)
         msg = Message(
             body=body,
             fontColor=fontColor,
@@ -2171,7 +2173,7 @@ class Room(CHConnection):
         self._mods = dict()
         self._msgs = dict()  # TODO esto y history es lo mismo?
         self._nameColor = ''
-        self._port = 443  # TODO cambio a 8080 si no está disponible
+        self._port = 8081  # TODO cambio a 8080 si no está disponible
         self._rbuf = b''
         self._connectiontime = 0
         self._recording = 0
@@ -2678,15 +2680,15 @@ class Room(CHConnection):
                     return True
         return False
 
-    def updateInfo(self, title='', info=''):
-        title = title or self._info[0]
-        info = info or self._info[1]
+    def update_info(self, title='', info=''):
+        title = title or self.info[0]
+        info = info or self.info[1]
         data = {
             "erase":  0, "l": 1, "d": info, "n": title, "u": self.name,
             "lo":     self._currentaccount[0], "p": self._currentaccount[1],
             "origin": "st.chatango.com",
         }
-        if WS.RPOST("http://chatango.com/updategroupprofile", data):
+        if WS.request("http://chatango.com/updategroupprofile", data, method='POST'):
             return True
         return False
 
@@ -2761,7 +2763,7 @@ class Room(CHConnection):
             headers.update({
                 "host": "chatango.com", "origin": "http://st.chatango.com"
             })
-        if WS.RPOST("http://chatango.com/updatemsgbg", data, headers):
+        if WS.request("http://chatango.com/updatemsgbg", data, headers, method = 'POST'):
             self._sendCommand("miu")
             return True
         else:
@@ -2808,8 +2810,8 @@ class Room(CHConnection):
             headers.update({
                 "host": "chatango.com", "origin": "http://st.chatango.com"
             })
-        if WS.RPOST("http://chatango.com/updateprofile", data,
-                    headers=headers):
+        if WS.request("http://chatango.com/updateprofile", data,
+                    headers=headers, method = 'POST'):
             return True  # TODO comprobar resultado
         else:
             return False
@@ -2842,7 +2844,7 @@ class Room(CHConnection):
         data, headers = WS.encode_multipart(data, files)
         headers.update(
             {"host": "chatango.com", "origin": "http://st.chatango.com"})
-        res = WS.RPOST("http://chatango.com/uploadimg", data, headers=headers)
+        res = WS.request("http://chatango.com/uploadimg", data, headers=headers, method='POST')
         if res:
             res = res.read().decode('utf-8')
             if 'success' in res:
@@ -2999,7 +3001,7 @@ class Room(CHConnection):
         target = args[2] and User(args[2]) or ''
         user = User(args[3])
         if not target:
-            msx = [msg for msg in self._history if msg.unid == args[0]]
+            msx = [msg for msg in self.history if msg.unid == args[0]]
             target = msx and msx[0].user or User('ANON')
             self._callEvent('onAnonBan', user, target)
         else:
@@ -3044,13 +3046,13 @@ class Room(CHConnection):
     def _rcmd_delete(self, args):
         """Borrar un mensaje de mi vista actual"""
         msg = self._msgs.get(args[0])
-        if msg and msg in self._history:
+        if msg and msg in self.history:
             self._history.remove(msg)
             self._callEvent("onMessageDelete", msg.user, msg)
             msg.detach()
         # Si hay menos de 20 mensajes pero el chat tiene más, por que no
         # pedirle otros tantos?
-        if len(self._history) < 20 and not self._nomore:
+        if len(self.history) < 20 and not self._nomore:
             self._sendCommand('get_more:20:0')
 
     def _rcmd_deleteall(self, args):
@@ -3059,7 +3061,7 @@ class Room(CHConnection):
         msgs = list()  # mensajes borrados
         for msgid in args:
             msg = self._msgs.get(msgid)
-            if msg and msg in self._history:
+            if msg and msg in self.history:
                 self._history.remove(msg)
                 user = msg.user
                 msg.detach()
@@ -3277,7 +3279,7 @@ class Room(CHConnection):
                     self._userhistory.append([contime, usr])
                 else:
                     self._userhistory.remove(
-                        [x for x in self._userhistory if x[1] == usr][0])
+                        [x for x in self._userhistory.copy() if x[1] == usr][0])
                     self._userhistory.append([contime, usr])
             if user.isanon:
                 self._callEvent('onAnonLeave', user, puid)
@@ -3291,7 +3293,7 @@ class Room(CHConnection):
                 self._callEvent('onAnonJoin', user, puid)
             # Agregar la sesión a la sala
             self._userdict[ssid] = [contime, user]
-            lista = [x[1] for x in self._userhistory]
+            lista = [x[1] for x in self._userhistory.copy()]
             if user in lista:
                 self._userhistory.remove(
                     [x for x in self._userhistory if x[1] == user][0])
@@ -3310,7 +3312,7 @@ class Room(CHConnection):
                     if before not in lista:
                         self._userhistory.append([contime, before])
                     else:
-                        lst = [x for x in self._userhistory if before == x[1]]
+                        lst = [x for x in self._userhistory.copy() if before == x[1]]
                         if lst:
                             self._userhistory.remove(lst[0])
                         self._userhistory.append([contime, before])
@@ -3342,12 +3344,11 @@ class Room(CHConnection):
                 msg.user._nameColor = msg.nameColor
             msg.attach(self, args[1])
             self._addHistory(msg)
-            if (msg.channel & ModChannels or msg.badge) and msg.user not in [
-                self.owner] + list(self.mods):  # TODO reducir
+            if (msg.channel & ModChannels) and msg.user not in [self.owner] + list(self.mods):
                 self._mods[msg.user] = self._parseFlags('0', ModFlags)
                 self._mods[msg.user].isadmin = False
             msg.user.history = msg
-            self._callEvent("onMessage", msg.user, msg)
+            self._callEvent("on_message", Struct(_name='Message Context',room=self, user=msg.user, message=msg))
 
     def _rcmd_ubw(self, args):  # TODO palabas desbaneadas ?)
         self._ubw = args
@@ -3490,7 +3491,7 @@ class Gestor:
     @classmethod
     def easy_start(cls, rooms: list = None, name: str = '',
                    password: str = '', pm: bool = True,
-                   accounts: [(str, str), (str, str), ...] = None):
+                   accounts: [(str, str), (str, str), ...] = None, **kwargs):
         """
         Inicio rápido del bot y puesta en marcha
         @param rooms: Una lista de salas
@@ -3499,22 +3500,27 @@ class Gestor:
         @param pm: Si se usará el PM o no
         @param accounts: Una lista/tupla de cuentas ((clave,usuario))
         """
-        if not rooms:
-            rooms = str(input('Nombres de salas separados por coma: ')).split(',')
+
         if '' in rooms:
             rooms = []
+        if not rooms:
+            rooms = str(input('Room names separated by comma: ')).split(',')
         if not name and not accounts:
-            name = str(input("Usuario: "))
+            name = str(input("Username: "))
         if not password and not accounts:
-            password = str(input("Contraseña: "))
+            password = str(input("Password: "))
         if not accounts:
             accounts = [(name, password)]
         self = cls(name, password, pm, accounts)
+        
+        # Assign custom values
+        for attr, val in kwargs.items():
+            setattr(self, '_' + attr, val)
 
         for room in rooms:
-            self.joinRoom(room)
-
+            self.join_room(room)
         self.main()
+        return self
 
     def onInit(self):
         """Invocado antes de empezar los demás procesos en main"""
@@ -3551,7 +3557,11 @@ class Gestor:
         """
         return self._rooms.get(room.lower())
 
-    def joinRoom(self, room: str, account=None):
+    @deprecated(new_one="join_room")
+    def joinRoom(self,*args,**kwargs):
+        return self.join_room(*args,**kwargs)
+
+    def join_room(self, room: str, account=None):
         """
         Unirse a una sala con la cuenta indicada
         @param room: Sala a la que unirse
@@ -3583,6 +3593,8 @@ class Gestor:
                 print("[{0}][{1}] El servidor de la sala no responde".format(
                     time.strftime('%I:%M:%S %p'), room), file=sys.stderr)
                 # TODO usar evento de sala cuando el server no responde
+            except Exception as fallo2:
+                print(f"[{time.strftime('%I:%M:%S %p')}][{room}] {fallo2}", file=sys.stderr)
 
     def leaveRoom(self, room):
         if isinstance(room, Room):
@@ -3595,6 +3607,9 @@ class Gestor:
         """
         Poner en marcha al bot
         """
+        if self._running == False:
+            return
+        self._running = True
         try:
             while self._pm == True:
                 try:
@@ -3607,9 +3622,6 @@ class Gestor:
                     time.sleep(10)
 
             self.onInit()
-            if self._running == False:
-                return
-            self._running = True
             self._jt = threading.Thread(target=self._joinThread, name="Join rooms")
             self._jt.daemon = True
             self._jt.start()
@@ -3875,10 +3887,22 @@ class Gestor:
         """
         pass
 
-    def onJoin(self, room, user, ssid):  # TODO comentar
+    def onJoin(self, room, user, ssid):
+        """
+        Al salir un usuario de la sala
+        param room: Sala que se abandona
+        param user: Usuario que se une
+        param ssid: Session id for the leaving user
+        """
         pass
 
-    def onLeave(self, room, user, ssid):  # TODO comentar
+    def onLeave(self, room, user, ssid):
+        """
+        Al salir un usuario de la sala
+        param room: Sala que se abandona
+        param user: Usuario que la abandona
+        param ssid: Session id for the leaving user
+        """
         pass
 
     def onLogin(self, room, user):
@@ -3914,14 +3938,18 @@ class Gestor:
         pass
 
     def onMessage(self, room: Room, user: User, message: Message):
+        print("ONMESSAGE EXISTE WEY")
+        pass
+
+    @deprecated(old_one='onMessage')
+    def on_message(self, context):
         """
         Al recibir un mensaje en una sala
         @param room: Sala en la que se ha recibido el mensaje
         @param user: Usuario que ha enviado (User)
         @param message: El mensaje enviado (Message)
-        @return:
         """
-        pass
+        self.onMessage(context.room, context.message.user, context.message) # TODO remove this in v2.0
 
     def onMessageDelete(self, room, user, message):
         """
@@ -3956,6 +3984,7 @@ class Gestor:
         @param room: Sala donde ocurre el evento
         @param user: Usuario que ha perdido su mod
         """
+        pass
 
     def onPMContactAdd(self, pm, user):
         """

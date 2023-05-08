@@ -52,7 +52,8 @@ class Bot(object):
 
 
 class StylesBot(object):
-    font_styles = {"name_color": "000000", "font_color": "000000", "font_face": 1, "font_size": 12}
+    font_styles = {"name_color": "000000",
+                   "font_color": "000000", "font_face": 1, "font_size": 12}
     titles_style = "<f x{}{}='{}'>".format(
         font_styles["font_size"],
         font_styles["name_color"],
@@ -93,7 +94,8 @@ class StylePrint(object):
                     channel_or_status = StylePrint.channel_tipe(message)
                 text = "[{}][{}][{}][{}]: {}"
                 text = text.format(
-                    time.strftime(Bot.hour_format, time.localtime(message.time)),
+                    time.strftime(Bot.hour_format,
+                                  time.localtime(message.time)),
                     StylePrint.user_room_style(place.name.title()),
                     StylePrint.user_room_style(Tools.user_showname(user.name)),
                     channel_or_status,
@@ -104,7 +106,8 @@ class StylePrint(object):
                         print(text)
                         break
                     except UnicodeEncodeError as error:
-                        text = "{} (UNICODE) {}".format(text[0:error.start], text[error.end:])
+                        text = "{} (UNICODE) {}".format(
+                            text[0:error.start], text[error.end:])
         except (Exception, BaseException):
             return "Error: {}".format(str(Tools.error_def()))
 
@@ -126,7 +129,8 @@ class StylePrint(object):
             badges = {
                 1: "SH", 2: "ST", 0: "N"
             }
-            final_text = text.format(channels.get(message.channel), badges.get(message.badge))
+            final_text = text.format(channels.get(
+                message.channel), badges.get(message.badge))
             return final_text
         except (Exception, BaseException):
             return "Error: {}".format(str(Tools.error_def()))
@@ -203,7 +207,8 @@ class Database(object):
         try:
             wl_ruta = Paths.u_wl
             with open(wl_ruta, "w") as save_users:
-                save_users.write(json.dumps(dict(Database.wl), indent=4, sort_keys=True))
+                save_users.write(json.dumps(
+                    dict(Database.wl), indent=4, sort_keys=True))
             return True
         except (Exception, BaseException):
             return "Error: {}".format(Tools.error_def())
@@ -213,7 +218,8 @@ class Database(object):
         try:
             rooms_ruta = Paths.u_rooms
             with open(rooms_ruta, "w") as save_rooms:
-                save_rooms.write(json.dumps(dict(Database.rooms), indent=4, sort_keys=True))
+                save_rooms.write(json.dumps(
+                    dict(Database.rooms), indent=4, sort_keys=True))
             return True
         except (Exception, BaseException):
             return "Error: {}".format(Tools.error_def())
@@ -224,7 +230,7 @@ class Database(object):
             Database.wl.clear()
             wl_ruta = Paths.u_wl
             with open(wl_ruta, encoding="utf-8") as load_users:
-                Database.wl.update(json.load(load_users, encoding="utf-8"))
+                Database.wl.update(json.load(load_users))
             return True
         except (Exception, BaseException):
             return "Error: {}".format(Tools.error_def())
@@ -235,7 +241,7 @@ class Database(object):
             Database.langs.clear()
             langs_ruta = Paths.u_langs_file
             with open(langs_ruta, encoding="utf-8") as load_all_langs:
-                Database.langs.update(json.load(load_all_langs, encoding="utf-8"))
+                Database.langs.update(json.load(load_all_langs))
             return True
         except (Exception, BaseException):
             return "Error: {}".format(Tools.error_def())
@@ -246,7 +252,7 @@ class Database(object):
             Database.rooms.clear()
             rooms_ruta = Paths.u_rooms
             with open(rooms_ruta, encoding="utf-8") as load_rooms:
-                Database.rooms.update(json.load(load_rooms, encoding="utf-8"))
+                Database.rooms.update(json.load(load_rooms))
             return True
         except (Exception, BaseException):
             return "Error: {}".format(Tools.error_def())
@@ -256,7 +262,8 @@ class Database(object):
         try:
             Database.save_wl()
             Database.save_rooms()
-            text = Database.take_lang_bot(Bot.bot_lang, "save_data").format(StylePrint.time_now()[0])
+            text = Database.take_lang_bot(
+                Bot.bot_lang, "save_data").format(StylePrint.time_now()[0])
             print(text)
             return True
         except (Exception, BaseException):
@@ -269,7 +276,8 @@ class Database(object):
             Database.load_rooms()
             Database.load_langs()
             Simi.load_data(os.path.join(Paths.u_bot, Paths.u_simi))
-            text = Database.take_lang_bot(Bot.bot_lang, "load_data").format(StylePrint.time_now()[0])
+            text = Database.take_lang_bot(
+                Bot.bot_lang, "load_data").format(StylePrint.time_now()[0])
             print(text)
             return True
         except (Exception, BaseException):
@@ -281,7 +289,8 @@ class Database(object):
             user = user.lower()
             if user not in Database.wl.keys():
                 if user[0] not in GlobalsV.anons:
-                    Database.wl.update({user: Database.Molds.Default_Wl.copy()})
+                    Database.wl.update(
+                        {user: Database.Molds.Default_Wl.copy()})
                     return True
             else:
                 return False
@@ -293,7 +302,8 @@ class Database(object):
         try:
             anon = anon.lower()
             if anon not in Database.wl_anons.keys():
-                Database.wl_anons.update({anon: Database.Molds.Default_Wl_Anons.copy()})
+                Database.wl_anons.update(
+                    {anon: Database.Molds.Default_Wl_Anons.copy()})
                 return True
             else:
                 return False
@@ -305,7 +315,8 @@ class Database(object):
         try:
             room = room.lower()
             if room not in Database.rooms.keys():
-                Database.rooms.update({room: Database.Molds.Default_Room.copy()})
+                Database.rooms.update(
+                    {room: Database.Molds.Default_Room.copy()})
                 return True
             else:
                 return False
@@ -652,7 +663,8 @@ class Tools(object):
                     )
 
             # Separate args
-            cmd_prefix, cmd, cmd_args, original_args = Tools.split_text(rusername, message.body)
+            cmd_prefix, cmd, cmd_args, original_args = Tools.split_text(
+                rusername, message.body)
 
             # Check if pm or room
             if roomname is not pmname:
@@ -710,7 +722,8 @@ class Tools(object):
                 return False
             user = data.find("buyer") > data.find("seller") > 0 and 1 or 0
             if not user:
-                user = data.find("<title>Unknown User!</title>") < 0 < data.find("</head>") and 2 or 0
+                user = data.find(
+                    "<title>Unknown User!</title>") < 0 < data.find("</head>") and 2 or 0
             if user == 1:
                 return "user"
             elif user == 2:
@@ -764,7 +777,8 @@ class Tools(object):
 
             # Automatic start of extra variables
             Files.import_special_defs(bot_self)
-            StylePrint.console_title("{}".format(random.choice(Bot.bot_names).upper()))
+            StylePrint.console_title("{}".format(
+                random.choice(Bot.bot_names).upper()))
 
             # Ch automatic start of variables
             bot_self.enableBg()
@@ -790,9 +804,9 @@ class Tools(object):
             rooms = Database.rooms.keys()
             for x in rooms:
                 if x not in ignore_room and x not in anon_room:
-                    self.joinRoom(x)
+                    self.join_room(x)
                 elif x in anon_room and x not in self.roomnames:
-                    self.joinRoom(x, ["", ""])
+                    self.join_room(x, ["", ""])
             return True
         except (Exception, BaseException):
             return "Error: {}".format(str(Tools.error_def()))
@@ -823,7 +837,8 @@ class Files(object):
     def delete_files(u):
         if os.path.exists(u):
             try:
-                [Files.delete_file("{}{}{}".format(u, os.sep, x)) for x in os.listdir(u)]
+                [Files.delete_file("{}{}{}".format(u, os.sep, x))
+                 for x in os.listdir(u)]
                 return True
             except Exception as e:
                 return e
@@ -858,7 +873,8 @@ class Files(object):
     def import_special_defs(bot_self):
         try:
             for x in [z for z in dir(special_defs) if callable(getattr(special_defs, z))]:
-                setattr(bot_self, x, types.MethodType(getattr(special_defs, x), bot_self))
+                setattr(bot_self, x, types.MethodType(
+                    getattr(special_defs, x), bot_self))
             Files.delete_pycache()
         except (Exception, BaseException):
             return "Error: {}".format(str(Tools.error_def()))
@@ -870,11 +886,13 @@ class Files(object):
             file_to_replace = "{}{}megach.py".format(Paths.u_bot, os.sep)
             with urlreq.urlopen(url) as info_online:
                 info_online = info_online.read().decode("utf-8").splitlines()
-                megach_online_v = [x for x in info_online if "version =" in x][0].split("=")[1]
+                megach_online_v = [x for x in info_online if "version =" in x][0].split("=")[
+                    1]
                 megach_online_v = megach_online_v.replace("'", "").lstrip(" ")
             with open(file_to_replace, encoding="utf-8") as a_megach:
                 a_megach = a_megach.read().splitlines()
-                megach_local_v = [x for x in a_megach if "version =" in x][0].split("=")[1]
+                megach_local_v = [x for x in a_megach if "version =" in x][0].split("=")[
+                    1]
                 megach_local_v = megach_local_v.replace("'", "").lstrip(" ")
                 if a_megach == info_online:
                     download = [False, megach_local_v, megach_online_v]
@@ -924,14 +942,16 @@ class Simi(object):
                 if "::" not in text:
                     return False
                 else:
-                    clave, definicion = [x.strip() for x in text.split(separator, 1)]
+                    clave, definicion = [x.strip()
+                                         for x in text.split(separator, 1)]
                     with open(archivo, "a", encoding="utf-8") as archivo_open:
                         http = definicion.find("http")
                         if http != -1:
                             definicion = definicion
                         else:
                             definicion = definicion.capitalize()
-                        archivo_open.write("{}{}{}\r".format(clave.capitalize(), separator, definicion))
+                        archivo_open.write("{}{}{}\r".format(
+                            clave.capitalize(), separator, definicion))
                     Simi.load_data(archivo)
                     return True
         except (Exception, BaseException):
@@ -956,7 +976,8 @@ class Simi(object):
                 filtro = []
                 if matches:
                     for x in matches:
-                        actual = len([a for a in sep if a in Simi.clean_text(x.split(separator)[0]).split()])
+                        actual = len([a for a in sep if a in Simi.clean_text(
+                            x.split(separator)[0]).split()])
                         if actual > mayor:
                             mayor = actual
                             del filtro[:]

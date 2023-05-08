@@ -6,14 +6,13 @@
 ###########
 
 import random
-import re
 
 import config
-
 
 #############################
 # Answer autorespuestas Def #
 #############################
+
 
 def auto_answers(**kwargs):
     room = kwargs["room"]
@@ -40,9 +39,11 @@ def auto_answers(**kwargs):
             if roomname is not pmname:
                 simi_args = original_args
             else:
-                simi_args = "{} {}".format(config.Bot.bot_names[0], original_args)
+                simi_args = "{} {}".format(
+                    config.Bot.bot_names[0], original_args)
 
-            splitted = "".join(x for x in simi_args.lower() if x.isalnum() or x in [" "]).split()
+            splitted = "".join(x for x in simi_args.lower()
+                               if x.isalnum() or x in [" "]).split()
 
             ######################################################
 
@@ -72,7 +73,8 @@ def auto_answers(**kwargs):
         ##########
 
         if answer != "":
-            config.Tools.answer_room_pm(room, answer, html, username, channel_, badge_)
+            config.Tools.answer_room_pm(
+                room, answer, html, username, channel_, badge_)
 
     ##################
     # Detector error #
